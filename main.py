@@ -24,6 +24,7 @@ async def load(ctx, folder, extension):
         await ctx.send("請不要冒充作者", delete_after= 3)
     await ctx.message.delete()
 
+@bot.command()
 async def unload(ctx, folder, extension):
     if ctx.author == bot.get_user(setting["authorId"]):
         try:
@@ -36,6 +37,7 @@ async def unload(ctx, folder, extension):
         await ctx.send("請不要冒充作者", delete_after= 3)
     await ctx.message.delete()
 
+@bot.command()
 async def reload(ctx, folder, extension):
     if ctx.author == bot.get_user(setting["authorId"]):
         try:
