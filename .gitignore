@@ -1,0 +1,8 @@
+aiohttp
+async_timeout
+attr
+discord
+idna
+multidict
+websockets
+yarl
