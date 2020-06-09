@@ -1,6 +1,7 @@
 import json
 import discord
 from discord.ext import commands
+import keep_alive
 
 bot = commands.Bot(command_prefix='+')
 
@@ -50,11 +51,12 @@ async def reload(ctx, folder, extension):
         await ctx.send("請不要冒充作者", delete_after= 3)
     await ctx.message.delete()
 
-'''@bot.command()
+@bot.command()
 async def printId(ctx):
     await ctx.send(ctx.author.id, delete_after = 10)
     #await ctx.send(setting["authorId"])
     #await ctx.send(type(setting["authorId"]))
     await ctx.message.delete()'''
 
+keep_alive.keep_alive()
 bot.run(setting["token"])
