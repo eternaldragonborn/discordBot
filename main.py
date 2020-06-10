@@ -21,7 +21,7 @@ async def load(ctx, folder, extension):
         except:
             await ctx.send("Something went wrong.", delete_after = 3)
         else:
-            await ctx.send(f"**{extension}** load successful.", delete_after = 3)
+            await ctx.send(f"> **{extension}** load successful.", delete_after = 3)
     else:
         await ctx.send("請不要冒充作者", delete_after= 3)
     await ctx.message.delete()
@@ -34,7 +34,7 @@ async def unload(ctx, folder, extension):
         except:
             await ctx.send("Something went wrong.", delete_after = 3)
         else:
-            await ctx.send(f"**{extension}** unload successful.", delete_after = 3)
+            await ctx.send(f"> **{extension}** unload successful.", delete_after = 3)
     else:
         await ctx.send("請不要冒充作者", delete_after= 3)
     await ctx.message.delete()
@@ -47,7 +47,7 @@ async def reload(ctx, folder, extension):
         except:
             await ctx.send("Something went wrong.", delete_after = 3)
         else:
-            await ctx.send(f"**{extension}** reload successful.", delete_after = 3)
+            await ctx.send(f"> **{extension}** reload successful.", delete_after = 3)
     else:
         await ctx.send("請不要冒充作者", delete_after= 3)
     await ctx.message.delete()
