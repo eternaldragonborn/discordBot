@@ -2,6 +2,7 @@ import json
 import discord
 from discord.ext import commands
 import keep_alive
+import os
 
 bot = commands.Bot(command_prefix='+')
 
@@ -58,5 +59,14 @@ async def printId(ctx):
     #await ctx.send(type(setting["authorId"]))
     await ctx.message.delete()'''
 
-keep_alive.keep_alive()
-bot.run(setting["token"])
+for f in os.listdir("./cmds"):
+    if f.endswith(".py"):
+        bot.load_extension(f"cmds.{f[:-3]}")
+
+for f in os.listdir("./events"):
+    if f.endswith(".py"):
+        bot.load_extension(f"events.{f[:-3]}")
+
+if __name__ == "__main__":
+    keep_alive.keep_alive()
+    bot.run(setting["token"])
