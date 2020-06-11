@@ -1,10 +1,10 @@
 import discord
 from discord.ext import commands
-import wrFiles
+import core.wrFiles
 from core.classes import Cog_Ext
 
-urls = wrFiles.readFile("others")
-authorId = wrFiles.readFile("setting")["authorId"]
+urls = core.wrFiles.readFile("others")
+authorId = core.wrFiles.readFile("setting")["authorId"]
 
 class EDIT_URL(Cog_Ext):
   @commands.command()
@@ -25,7 +25,7 @@ class EDIT_URL(Cog_Ext):
           await cxt.send("新增失敗", delete_after = 3)
         else:
           await cxt.send("新增完畢", delete_after = 3)
-      wrFiles.writeFile("others", urls)
+      core.wrFiles.writeFile("others", urls)
     await cxt.message.delete()
 
   @commands.command()
@@ -38,7 +38,7 @@ class EDIT_URL(Cog_Ext):
           await cxt.send("刪除失敗", delete_after = 3)
         else:
           await cxt.send("刪除成功", delete_after = 3)
-          wrFiles.writeFile("others", urls)
+          core.wrFiles.writeFile("others", urls)
       else:
         try:
           urls[item].remove(url)
@@ -46,8 +46,9 @@ class EDIT_URL(Cog_Ext):
           await cxt.send("刪除失敗", delete_after = 3)
         else:
           await cxt.send("刪除成功", delete_after = 3)
-          wrFiles.writeFile("others", urls)
+          core.wrFiles.writeFile("others", urls)
     await cxt.message.delete()
+
 
 def setup(bot):
   bot.add_cog(EDIT_URL(bot))

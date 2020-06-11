@@ -1,7 +1,7 @@
 import json
 import discord
 from discord.ext import commands
-import keep_alive
+from core.keep_alive import keep_alive
 import os
 
 bot = commands.Bot(command_prefix='+')
@@ -13,60 +13,20 @@ with open("setting.json", "r", encoding= "utf8") as jsettings:
 async def on_ready():
     print("Bot is online")
 
-@bot.command()
-async def load(ctx, folder, extension):
-    if ctx.author == bot.get_user(setting["authorId"]):
-        try:
-            bot.load_extension(f"{folder}.{extension}")
-        except:
-            await ctx.send("Something went wrong.", delete_after = 3)
-        else:
-            await ctx.send(f"> **{extension}** load successful.", delete_after = 3)
-    else:
-        await ctx.send("請不要冒充作者", delete_after= 3)
-    await ctx.message.delete()
 
-@bot.command()
-async def unload(ctx, folder, extension):
-    if ctx.author == bot.get_user(setting["authorId"]):
-        try:
-            bot.unload_extension(f"{folder}.{extension}")
-        except:
-            await ctx.send("Something went wrong.", delete_after = 3)
-        else:
-            await ctx.send(f"> **{extension}** unload successful.", delete_after = 3)
-    else:
-        await ctx.send("請不要冒充作者", delete_after= 3)
-    await ctx.message.delete()
-
-@bot.command()
-async def reload(ctx, folder, extension):
-    if ctx.author == bot.get_user(setting["authorId"]):
-        try:
-            bot.reload_extension(f"{folder}.{extension}")
-        except:
-            await ctx.send("Something went wrong.", delete_after = 3)
-        else:
-            await ctx.send(f"> **{extension}** reload successful.", delete_after = 3)
-    else:
-        await ctx.send("請不要冒充作者", delete_after= 3)
-    await ctx.message.delete()
-
-'''@bot.command()
-async def printId(ctx):
-    await ctx.send(ctx.author.id, delete_after = 10)
-    #await ctx.send(setting["authorId"])
-    #await ctx.send(type(setting["authorId"]))
-    await ctx.message.delete()'''
-
-for f in os.listdir("./cmds"):
+def initialization(folder):
+  for f in os.listdir(f"./{folder}"):
     if f.endswith(".py"):
-        bot.load_extension(f"cmds.{f[:-3]}")
+      try:
+        bot.load_extension(f"{folder}.{f[:-3]}")
+      except Exception as e:
+        print(e)
+        print()
 
-for f in os.listdir("./events"):
-    if f.endswith(".py"):
-        bot.load_extension(f"events.{f[:-3]}")
+initialization("cmds")
+
+initialization("events")
 
 if __name__ == "__main__":
-    keep_alive.keep_alive()
+    keep_alive()
     bot.run(setting["token"])
