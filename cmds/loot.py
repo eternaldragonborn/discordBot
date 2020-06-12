@@ -15,16 +15,14 @@ botId = readFile("setting")["botId"]
 
 class Loot(Cog_Ext):
     @commands.command()
-    async def loot(self, ctx, n: int, *, arg=""):
+    async def loot(self, ctx, n: int =1, *, arg=""):
         global statu
-        global participants
         global initiator
         global item
         global winner_num
         if statu == 1:
             await ctx.send(
-                f"已經有抽獎正在進行中，發起人：{self.bot.get_user(initiator).mention}",
-                delete_after=3)
+                f"已經有抽獎正在進行中，發起人：{self.bot.get_user(initiator).mention}", delete_after=3)
         else:
             if n <= 0:
                 await ctx.send("無效的抽出人數", delete_after=3)
@@ -35,8 +33,7 @@ class Loot(Cog_Ext):
                 initiator = ctx.author.id
                 item = arg
                 await ctx.send(
-                    f"{ctx.author.mention} 開始了抽獎，預計抽出 ***{winner_num}*** 個人，輸入'**抽**'參加抽獎，指令'**+loot_e**'抽出得獎人",
-                    delete_after=20)
+                    f"{ctx.author.mention} 開始了抽獎，預計抽出 ***{winner_num}*** 個人，輸入'**抽**'參加抽獎，指令'**+loot_e**'抽出得獎人")
         await ctx.message.delete()
 
     @commands.command()
@@ -58,13 +55,9 @@ class Loot(Cog_Ext):
                     await ctx.send("參加人數少於預計抽出人數", delete_after=5)
                 else:
                     winners = random.sample(participants, winner_num)
-                    '''await ctx.send("恭喜")
-                    for i in winners:
-                        await ctx.send(self.bot.get_user(i).mention)
-                    await ctx.send(f"抽到了 {item}")'''
                     winners_m = ""
                     for i in winners:
-                        winners_m.append(self.bot.get_user(i).mention)
+                        winners_m+=(f"{self.bot.get_user(i).mention} ")
                     await ctx.send(
                         f"恭喜\n{winners_m}\n抽到了 {item}", delete_after=15)
                 statu = 0

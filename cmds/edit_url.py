@@ -11,13 +11,16 @@ class EDIT_URL(Cog_Ext):
 	async def add_url(self, cxt, item, url, weight :int=1):
 		if cxt.author.id == authorId:
 			if item in urls.keys():
-				try:
-					newurl = {url : weight}
-					urls[item].update(newurl)
-				except:
-					await cxt.send("新增失敗", delete_after = 3)
+				if url in urls[item].keys():
+					await cxt.send("此圖已在檔案中", delete_after = 3)
 				else:
-					await cxt.send("新增完畢", delete_after = 3)
+					try:
+						newurl = {url : weight}
+						urls[item].update(newurl)
+					except:
+						await cxt.send("新增失敗", delete_after = 3)
+					else:
+						await cxt.send("新增完畢", delete_after = 3)
 			else:
 				try:
 					newitem = {item : {url : weight}}
