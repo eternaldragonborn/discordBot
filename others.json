@@ -1,7 +1,6 @@
 {
 	"rrr": [
-		"https://thumbs.gfycat.com/LoathsomeUnequaledGuillemot-size_restricted.gif",
-		"https://tenor.com/view/rip-ahhh-shocked-noooo-gif-13892281"
+		"https://thumbs.gfycat.com/LoathsomeUnequaledGuillemot-size_restricted.gif"
 	],
 	"loadingCat": [
 		"https://imgur.com/FDxyfzI.gif",
@@ -12,6 +11,27 @@
 	"what": [
 		"https://i.imgur.com/Wt9X5M2.jpg",
 		"https://i.imgur.com/I33cPpW.jpg",
-		"https://i.imgur.com/Vu7DFXH.jpg"
-	]
+		"https://i.imgur.com/Vu7DFXH.jpg",
+		"https://i.imgur.com/WP3KUHc.png"
+	],
+	"emmm": [
+		"https://i.imgur.com/pBtSQY2.png",
+		"https://i.imgur.com/O2KEANT.png",
+		"https://i.imgur.com/rMfjBLQ.gifv",
+		"https://i.imgur.com/qnG94J9.gifv"
+	],
+	"weights": {
+		"loadingcat": [
+			3,
+			3,
+			1,
+			1
+		],
+		"emmm": [
+			4,
+			1,
+			2,
+			2
+		]
+	}
 }
