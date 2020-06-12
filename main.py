@@ -5,6 +5,7 @@ from core.keep_alive import keep_alive
 import os
 
 bot = commands.Bot(command_prefix='+')
+bot.remove_command("help")
 
 with open("setting.json", "r", encoding= "utf8") as jsettings:
 		setting = json.load(jsettings)
