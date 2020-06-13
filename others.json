@@ -1,6 +1,7 @@
 {
 	"rrr": {
-		"https://i.imgur.com/OZVk4wD.gifv": 1
+		"https://i.imgur.com/OZVk4wD.gifv": 1,
+		"https://i.imgur.com/4qsOH6l.gifv": 1
 	},
 	"loadingCat": {
 		"https://imgur.com/FDxyfzI.gif": 3,
@@ -14,7 +15,8 @@
 		"https://i.imgur.com/Vu7DFXH.jpg": 1,
 		"https://i.imgur.com/WP3KUHc.png": 1,
 		"https://i.imgur.com/wMEwGzA.png": 1,
-		"https://i.imgur.com/dIws8Cc.jpg": 1
+		"https://i.imgur.com/dIws8Cc.jpg": 1,
+		"https://i.imgur.com/spa6UWQ.gifv": 1
 	},
 	"emmm": {
 		"https://i.imgur.com/pBtSQY2.png": 3,
@@ -30,5 +32,12 @@
 		"https://i.imgur.com/H3PvVSN.jpg": 1,
 		"https://i.imgur.com/JZWGnFU.jpg": 1,
 		"https://i.imgur.com/wXakvWk.jpg": 1
+	},
+	"help": {
+	"+clean":"清除bot在頻道的訊息",
+	"+loading <s=5>":"載入中...持續(s)秒",
+	"+programming":"想學程式?推薦以下幾本書...",
+	"+loot <n=1> <thing>":"發起抽獎，抽(n)個人",
+	"+loot_e":"開始抽獎"
 	}
 }

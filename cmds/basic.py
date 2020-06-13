@@ -89,7 +89,7 @@ class BASIC(Cog_Ext):
 	async def help(self, ctx):
 		embed=discord.Embed(title="指令列表", color=0x3774d7)
 		embed.set_author(name="DragonBot",icon_url="https://cdn.discordapp.com/app-icons/719120395571298336/e2ea7b8292b811643fa84dbc3161e1ed.png?size=128")
-		for Command, description in readFile("help").items():
+		for Command, description in readFile("others")["help"].items():
 			embed.add_field(name= Command, value= description, inline=False)
 		embed.set_footer(text="就是一隻龍，毫無反應。")
 		await ctx.send(embed = embed)
