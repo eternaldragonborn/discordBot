@@ -5,6 +5,8 @@ import random
 from core.wrFiles import readFile
 import re
 
+authorId = readFile("setting")["authorId"]
+botId = readFile("setting")["botId"]
 
 def choice_url(item):
 	url = readFile("others")[item]
@@ -18,16 +20,13 @@ class Events(Cog_Ext):
 				await msg.channel.send(f"{msg.author.mention}\n{choice_url('rrr')}", delete_after=4)
 			elif "loading cat" in msg.content.lower():
 				await msg.channel.send(choice_url("loadingCat"), delete_after=5)
-			elif re.search(r'(星爆)|(星暴)|(c8763)|(star(\s)?burst)', msg.content.lower()):
+			#elif re.search(r'星爆|星暴|c8763|star(\s)?burst|(10|十)[^:分月/\-\s\d\.]+(16|十六)[^秒]|(10|十)\s*秒', msg.content.lower()):
+			elif re.search(r'星爆|星暴|c8763|star(\s)?burst|(10|十)\s*(秒|sec)', msg.content.lower()):
 				await msg.add_reaction("\N{THUMBS DOWN SIGN}")
 			elif "虫合" in msg.content or "蛤" in msg.content:
 				await msg.channel.send(choice_url("what"), delete_after=5)
-			elif re.match(r'emmm', msg.content.lower()):
-				await msg.channel.send(choice_url("emmm"), delete_after = 5)
-
-		'''@commands.Cog.listener()
-		async def on_reaction_add(self, reaction, user):
-			print(reaction)'''
+			elif re.search(r'emmm', msg.content.lower()):
+				await msg.channel.send(choice_url("emmm"), delete_after = 10)
 
 	@commands.command()
 	async def loading(self, ctx, delay_time: int = 5):
@@ -38,6 +37,15 @@ class Events(Cog_Ext):
 	async def programming(self, ctx):
 		await ctx.send(choice_url("programming"), delete_after = 4)
 		await ctx.message.delete()
+
+	@commands.Cog.listener()
+	async def on_reaction_remove(self, reaction, user):
+		print(reaction)
+
+	@commands.Cog.listener()
+	async def on_command_error(self, ctx, error):
+		if isinstance(error, commands.CommandError):
+			pass
 
 
 def setup(bot):

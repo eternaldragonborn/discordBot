@@ -9,7 +9,8 @@ botId = readFile("setting")["botId"]
 class BASIC(Cog_Ext):
 	@commands.command()
 	async def load(self, ctx, folder, extension):
-			if ctx.author == self.bot.get_user(authorId):
+			#if ctx.author == self.bot.get_user(authorId):
+			if await self.bot.is_owner(ctx.author):
 					try:
 							self.bot.load_extension(f"{folder}.{extension}")
 					except Exception as e:
@@ -24,7 +25,8 @@ class BASIC(Cog_Ext):
 
 	@commands.command()
 	async def unload(self, ctx, folder, extension):
-			if ctx.author == self.bot.get_user(authorId):
+			#if ctx.author == self.bot.get_user(authorId):
+			if await self.bot.is_owner(ctx.author):
 					try:
 							self.bot.unload_extension(f"{folder}.{extension}")
 					except Exception as e:
@@ -39,7 +41,8 @@ class BASIC(Cog_Ext):
 
 	@commands.command()
 	async def reload(self, ctx, folder, extension):
-			if ctx.author == self.bot.get_user(authorId):
+			#if ctx.author == self.bot.get_user(authorId):
+			if await self.bot.is_owner(ctx.author):
 					try:
 							self.bot.reload_extension(f"{folder}.{extension}")
 					except Exception as e:
@@ -52,25 +55,34 @@ class BASIC(Cog_Ext):
 					await ctx.send("請不要冒充作者", delete_after= 3)
 			await ctx.message.delete()
 
+	count = 0
+
 	@commands.command()
 	async def clean(self, ctx, limit :int =999, target :int =botId):
+		global count
 		def judge(msg :discord.Message) -> bool:
-			return msg.author.id == target
+			if msg.author.id == target:
+				global count
+				count+=1
+				return True
+			else:
+				return False
 		if ctx.author.id == authorId or target == botId:
-			await ctx.channel.purge(check = judge, limit = limit+1)
-			await ctx.send("清除完畢", delete_after = 3)
+			count = 0
+			await ctx.message.delete()
+			await ctx.channel.purge(check = judge, limit = limit)
+			await ctx.send(f"清除了 {count} 條訊息", delete_after = 5)
 		else:
 			await ctx.send("You don't have permission or target is not a user.", delete_after = 3)
-		try:
-			await ctx.message.delete()
-		except:
-			pass
 
 	@commands.command()
 	async def test(self, ctx, times :int=1):
 		if ctx.author.id == authorId:
-			for i in range(times):
-				await ctx.send("This is for test.")
+			if await self.bot.is_owner(ctx.author):
+				for i in range(times):
+					await ctx.send("This is for test.")
+		'''if msg == self.bot.get_user(authorId).mention:
+			await ctx.send("y")'''
 		await ctx.message.delete()
 	
 	@commands.command()

@@ -4,7 +4,7 @@ from discord.ext import commands
 from core.keep_alive import keep_alive
 import os
 
-bot = commands.Bot(command_prefix='+')
+bot = commands.Bot(command_prefix='+', owner_id = 384233645621248011)
 bot.remove_command("help")
 
 with open("setting.json", "r", encoding= "utf8") as jsettings:
