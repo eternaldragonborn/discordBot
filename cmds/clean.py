@@ -16,13 +16,26 @@ class CLEAN(Cog_Ext):
       await ctx.message.delete()
 
   @commands.command()
-  async def clean_channel(self, ctx, channel :int, n :int =None):
-    if await self.bot.is_owner(ctx.author) and channel == ctx.channel.id:
-      count = len(await ctx.channel.purge(limit = n))
-      await ctx.send(f"清除了 {len(count)} 條訊息", delete_after = 5)
-    else:
-      await ctx.send("You don't have permission or you are not in the target channel.", delete_after = 3)
+  async def clean_channel(self, ctx):
+    def check(reaction, user):
+      return user == ctx.author and reaction.message.id == msg.id and str(reaction.emoji) == "\N{WHITE HEAVY CHECK MARK}"
+    if await self.bot.is_owner(ctx.author):
       await ctx.message.delete()
+      msg = await ctx.send("確定刪除此頻道的所有訊息?", delete_after = 6)
+      await msg.add_reaction("\N{WHITE HEAVY CHECK MARK}")
+      try:
+        await self.bot.wait_for("reaction_add", timeout = 5, check = check)
+      except:
+        await ctx.send("超出時間，指令取消", delete_after = 3)
+      else:
+        count = len(await ctx.channel.purge(limit = None))
+        await ctx.send(f"清除了 {len(count)} 條訊息", delete_after = 5)
+      #reaction, user = await self.bot.wait_for("reaction_add", timeout = 5, check = check)
+      #print(reaction)
+    else:
+      await ctx.message.delete()
+      await ctx.send("You don't have permission or you are not in the target channel.", delete_after = 3)
+    
 
   @commands.command()
   async def test(self, ctx, times :int=1):

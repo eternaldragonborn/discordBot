@@ -12,10 +12,8 @@
 	"what": {
 		"https://i.imgur.com/Wt9X5M2.jpg": 1,
 		"https://i.imgur.com/I33cPpW.jpg": 1,
-		"https://i.imgur.com/Vu7DFXH.jpg": 1,
 		"https://i.imgur.com/WP3KUHc.png": 1,
 		"https://i.imgur.com/wMEwGzA.png": 1,
-		"https://i.imgur.com/dIws8Cc.jpg": 1,
 		"https://i.imgur.com/spa6UWQ.gifv": 1
 	},
 	"emmm": {
@@ -34,10 +32,10 @@
 		"https://i.imgur.com/wXakvWk.jpg": 1
 	},
 	"help": {
-	"+clean":"清除bot在頻道的訊息",
-	"+loading <s=5>":"載入中...持續(s)秒",
-	"+programming":"想學程式?推薦以下幾本書...",
-	"+loot <n=1> <thing>":"發起抽獎，抽(n)個人",
-	"+loot_e":"開始抽獎"
+		"+clean": "\u6e05\u9664bot\u5728\u983b\u9053\u7684\u8a0a\u606f",
+		"+loading <s=5>": "\u8f09\u5165\u4e2d...\u6301\u7e8c(s)\u79d2",
+		"+programming": "\u60f3\u5b78\u7a0b\u5f0f?\u63a8\u85a6\u4ee5\u4e0b\u5e7e\u672c\u66f8...",
+		"+loot <n=1> <thing>": "\u767c\u8d77\u62bd\u734e\uff0c\u62bd(n)\u500b\u4eba",
+		"+loot_e": "\u958b\u59cb\u62bd\u734e"
 	}
 }

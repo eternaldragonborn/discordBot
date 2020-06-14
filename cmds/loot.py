@@ -27,7 +27,6 @@ class Loot(Cog_Ext):
             if n <= 0:
                 await ctx.send("無效的抽出人數", delete_after=3)
             else:
-                participants = []
                 winner_num = n
                 statu = 1
                 initiator = ctx.author.id
@@ -58,8 +57,8 @@ class Loot(Cog_Ext):
                     winners_m = ""
                     for i in winners:
                         winners_m+=(f"{self.bot.get_user(i).mention} ")
-                    await ctx.send(
-                        f"恭喜\n{winners_m}\n抽到了 {item}", delete_after=15)
+                    await ctx.send(f"恭喜\n{winners_m}\n抽到了 {item}", delete_after=15)
+                participants = []
                 statu = 0
         await ctx.message.delete()
 

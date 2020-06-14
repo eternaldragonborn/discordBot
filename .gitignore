@@ -10,5 +10,4 @@ setting.json
 poetry.lock
 pyproject.toml
 __pycache__/
-games/
 test.py
