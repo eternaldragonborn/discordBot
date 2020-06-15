@@ -5,7 +5,7 @@ from core.wrFiles import readFile
 import random
 
 
-is_started = False
+is_started = False    #declear, lots of declear
 in_game = False
 initiator = ""  #莊家
 participants = {}   #{name : [point, *cards]}
@@ -44,17 +44,32 @@ class BLACKJACK(Cog_Ext):
     if len(participants.keys()) == 0:
       await channel.send("所有玩家皆爆牌，此局遊戲無贏家")
     else:
+      winner = []
+      msg = ""
       for player, point in participants.items():
         if point[0] > maxpoint:    
           maxpoint = point[0]
-          winner = player
-      if winner == initiator:
-        await channel.send(f"回合結束，莊家({initiator.mention})贏了，各玩家資訊")
-      else:
-        await channel.send(f"回合結束，{winner.mention}贏了，各玩家資訊：")
       for player, point in participants.items():
-        await channel.send(f"{player.mention} : {point[0]}點，手牌 : {point[1:]}")
-      await channel.send("** **")
+        if point[0] == maxpoint:    
+          winner.append(player)
+      if initiator in winner:
+        msg += f"回合結束，莊家({initiator.mention})贏了，各玩家資訊：\n"
+      else:
+        msg += "回合結束，"
+        for player in winner:
+          if player != winner[-1]:
+            msg += f" {player.mention} &"
+          else:
+            msg += f" {player.mention}"
+        msg += " 贏了，各玩家資訊：\n"
+      for player, point in participants.items():
+        msg += f"{player.mention} : `{point[0]}` 點，手牌 :"
+        for card in point[1:-1]:
+          msg += f"`{card[0]}` `{card[1]}`、"
+        msg += f"`{point[-1][0]}` `{point[-1][1]}`\n"
+      msg += "** **"
+      await channel.send(msg)
+
     if Round > t_round:
       await channel.send("遊戲結束")
       in_game = False
@@ -84,7 +99,7 @@ class BLACKJACK(Cog_Ext):
       if len(list(participants.keys())) <= 1:
         await channel.send("遊戲人數不足", delete_after = 5)
         is_started = False
-        participants = []
+        participants = {}
       else:
         await channel.send("遊戲開始，由於bot一定時間內只能發5則訊息，若訊息卡住請稍帶數秒，`+p`可查詢點數")
         in_game = True
@@ -94,15 +109,17 @@ class BLACKJACK(Cog_Ext):
         random.shuffle(players)
         players.append(initiator)
         await channel.send(f"第 {Round} 回合開始，要牌順序及明牌：")
+        msg = ""
         for i, player in enumerate(players[:-1]):  #發明牌
           card1 = draw(player)
           card2 = draw(player)
-          await channel.send(f"{i+1}.{player.mention} : `{card1[0]}` `{card1[1]}`、`{card2[0]}` `{card2[1]}`")
+          msg += f"{i+1}.{player.mention} : `{card1[0]}` `{card1[1]}`、`{card2[0]}` `{card2[1]}`\n"
         card1 = draw(players[-1])
         card2 = draw(players[-1])
         await initiator.send(f"暗牌：`{card1[0]}` `{card1[1]}`")
-        await channel.send(f"莊家：{players[-1].mention} :暗牌不公開、 `{card2[0]}` `{card2[1]}`")
-      await channel.send(f'現在是 {players[turn].mention} 的回合，輸入"`draw`"加牌，"`next`"結束加牌(結束遊戲)')
+        msg += f"莊家：{players[-1].mention} :暗牌不公開、 `{card2[0]}` `{card2[1]}`"
+        await channel.send(msg)
+      await channel.send(f'現在是 {players[turn].mention} 的回合，輸入"`draw`"加牌，爆牌/21點/"`next`"結束加牌(遊戲)')
 
   @commands.command(aliases = ["BJ"])
   async def blackjack(self, ctx, n :int =2, r :int =1):
@@ -130,9 +147,7 @@ class BLACKJACK(Cog_Ext):
         participants.setdefault(initiator , [0])
         player_num = n
         t_round = r
-        await ctx.send(f"{ctx.author.mention}開始了21點遊戲，預計進行 **{r}** 回合", delete_after = 60)
-        await ctx.send(f'輸入"`join`"以加入遊戲，參加人數達到 **{n}** 或遊戲發起人使用指令 `+BJ_s` 開始遊戲', delete_after = 60)
-
+        await ctx.send(f'{ctx.author.mention}開始了21點遊戲，預計進行 **{r}** 回合\n輸入"`join`"以加入遊戲，參加人數達到 **{n}** 或遊戲發起人使用指令 `+BJ_s` 開始遊戲', delete_after = 60)
 
   @commands.Cog.listener()
   async def on_message(self, msg):
@@ -156,16 +171,22 @@ class BLACKJACK(Cog_Ext):
         await msg.channel.send(f"{msg.author.mention}參加成功", delete_after = 3)
         if len(participants.keys()) == player_num:
           await BLACKJACK.game()
-      
 
     elif in_game and msg.channel == channel and msg.author == players[turn]:
       if msg.content.lower() == "draw":  #加牌
         await msg.delete()
         card = draw(players[turn])
         await msg.channel.send(f"{msg.author.mention} : `{card[0]}` `{card[1]}`")
+        player = participants[players[turn]]
 
-        if participants[players[turn]][0] > 21:     #爆牌
-          await msg.channel.send(f"{msg.author.mention} 爆牌了，手牌: {participants[players[turn]][1:]}，共 `{participants[players[turn]][0]}` 點")
+        if player[0] > 21:     #爆牌
+          MSG = ""
+          #await msg.channel.send(f"{msg.author.mention} 爆牌了，手牌: {participants[players[turn]][1:]}，共 `{participants[players[turn]][0]}` 點")
+          MSG += f"{msg.author.mention} 爆牌了，手牌:"
+          for card in player[1:-1]:
+            MSG += f"`{card[0]}` `{card[1]}`、"
+          MSG += f"`{player[-1][0]}` `{player[-1][1]}`，共 `{player[0]}` 點"
+          await msg.channel.send(MSG)
           del participants[players[turn]]
 
           if msg.author == initiator:  #莊家爆牌
@@ -174,9 +195,13 @@ class BLACKJACK(Cog_Ext):
           else:    #閒家爆牌
             turn += 1
             await BLACKJACK.game()
+        '''else:   #21點
+          if participants[players[turn]][0] == 21:
+            await msg.channel.send(f"{msg.author.mention} 21點")
+            turn += 1
+            await BLACKJACK.game()'''
 
       elif msg.content.lower() == "next":  #結束加牌
-        
         if msg.author == initiator:   #莊家
           Round += 1
           await BLACKJACK.end_game()
