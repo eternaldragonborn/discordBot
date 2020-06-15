@@ -8,7 +8,7 @@ import random
 is_started = False    #declear, lots of declear
 in_game = False
 initiator = ""  #莊家
-participants = {}   #{name : [point, *cards]}
+participants = {}   #{name : [point, *cards]}  ->  {name : [*cards]}
 channel = ""  #遊玩的頻道
 turn = 0
 cards = []
@@ -25,9 +25,41 @@ def draw(player):  #抽牌
   global participants
   random.shuffle(cards)
   card = cards.pop()    #考慮以random產生index
-  participants[player][0] += point[card[1]]
   participants[player].append(card)
   return card
+
+def point_check(player):
+  global participants
+  global point
+  total_p = 0
+  p = []
+  ace_count = 0
+  for card in participants[player]:
+    if card[1] == "A":
+      ace_count += 1
+    else:
+      total_p += point[card[1]]
+  if ace_count == 0:  #無Ace
+    return [total_p]
+  else:
+    for i in range(1, ace_count+1):
+      temp = total_p + i + 11*(ace_count-i)
+      if temp < 21 and temp not in p:
+        p.append(temp)
+
+      temp = total_p + 11*i + (ace_count-i)
+      if temp < 21 and temp not in p:
+        p.append(temp)
+
+      if (total_p + i + 11*(ace_count-i)) == 21 or (total_p + 11*i + (ace_count-i)) == 21:
+        p = [21]
+        break
+      if p == []:  #不符合前面任何條件(爆牌)
+        p = [total_p + i + 11*(ace_count-i)]
+      else:
+        break
+    return p
+
 
 class BLACKJACK(Cog_Ext):
 
@@ -39,21 +71,20 @@ class BLACKJACK(Cog_Ext):
     global players
     global Round
     global turn
-    maxpoint = 0 
 
     if len(participants.keys()) == 0:
       await channel.send("所有玩家皆爆牌，此局遊戲無贏家")
     else:
+      point = []
       winner = []
       msg = ""
-      for player, point in participants.items():
-        if point[0] > maxpoint:    
-          maxpoint = point[0]
-      for player, point in participants.items():
-        if point[0] == maxpoint:    
+      for player in participants.keys():
+        point.append(max(point_check(player)))
+      for i, player in enumerate(participants.keys()):
+        if point[i] == max(point):    
           winner.append(player)
       if initiator in winner:
-        msg += f"回合結束，莊家({initiator.mention})贏了，各玩家資訊：\n"
+        msg += f"回合結束，莊家({initiator.mention})"
       else:
         msg += "回合結束，"
         for player in winner:
@@ -61,12 +92,14 @@ class BLACKJACK(Cog_Ext):
             msg += f" {player.mention} &"
           else:
             msg += f" {player.mention}"
-        msg += " 贏了，各玩家資訊：\n"
-      for player, point in participants.items():
-        msg += f"{player.mention} : `{point[0]}` 點，手牌 :"
-        for card in point[1:-1]:
-          msg += f"`{card[0]}` `{card[1]}`、"
-        msg += f"`{point[-1][0]}` `{point[-1][1]}`\n"
+      msg += "贏了，各玩家資訊：\n"
+      for player, p in zip(list(participants.items()), point):
+        msg += f"{player[0].mention} : `{p}` 點，手牌 :"
+        for card in player[1]:
+          if card != player[1][-1]:
+            msg += f"`{card[0]}` `{card[1]}`、"
+          else:
+            msg += f"`{card[0]}` `{card[1]}`\n"
       msg += "** **"
       await channel.send(msg)
 
@@ -79,10 +112,10 @@ class BLACKJACK(Cog_Ext):
       Round = 1
     else:
       turn = 0
-      participants = {initiator : [0]}
+      participants = {initiator : []}
       players.remove(initiator)
       for player in players:
-        participants.setdefault(player, [0])
+        participants.setdefault(player , [])
       await BLACKJACK.game()
 
   async def game():
@@ -110,14 +143,14 @@ class BLACKJACK(Cog_Ext):
         players.append(initiator)
         await channel.send(f"第 {Round} 回合開始，要牌順序及明牌：")
         msg = ""
-        for i, player in enumerate(players[:-1]):  #發明牌
+        for i, player in enumerate(players):  #發明牌
           card1 = draw(player)
           card2 = draw(player)
-          msg += f"{i+1}.{player.mention} : `{card1[0]}` `{card1[1]}`、`{card2[0]}` `{card2[1]}`\n"
-        card1 = draw(players[-1])
-        card2 = draw(players[-1])
-        await initiator.send(f"暗牌：`{card1[0]}` `{card1[1]}`")
-        msg += f"莊家：{players[-1].mention} :暗牌不公開、 `{card2[0]}` `{card2[1]}`"
+          if player != players[-1]:
+            msg += f"{i+1}.{player.mention} : `{card1[0]}` `{card1[1]}`、`{card2[0]}` `{card2[1]}`\n"
+          else:
+            await initiator.send(f"暗牌：`{card1[0]}` `{card1[1]}`")
+            msg += f"莊家：{players[-1].mention} : `暗牌不公開`、`{card2[0]}` `{card2[1]}`"
         await channel.send(msg)
       await channel.send(f'現在是 {players[turn].mention} 的回合，輸入"`draw`"加牌，爆牌/21點/"`next`"結束加牌(遊戲)')
 
@@ -136,15 +169,15 @@ class BLACKJACK(Cog_Ext):
     if is_started:
       await ctx.send("已經有人開始遊戲", delete_after = 3)
     else:
-      if (not 1 < n <= 5) or (not 0 < r <= 5):
-        await ctx.send("遊戲人數不合理或局數超出上限", delete_after = 3)
+      if (not 1 < n <= 10) or (not 0 < r <= 5):
+        await ctx.send("遊戲人數或局數不合理(1 < 人數 <= 10， 0 < 局數 <= 5)", delete_after = 3)
       else:
         turn = 0
         is_started = True
         in_game = False
         initiator = ctx.author
         channel = ctx.channel
-        participants.setdefault(initiator , [0])
+        participants.setdefault(initiator , [])
         player_num = n
         t_round = r
         await ctx.send(f'{ctx.author.mention}開始了21點遊戲，預計進行 **{r}** 回合\n輸入"`join`"以加入遊戲，參加人數達到 **{n}** 或遊戲發起人使用指令 `+BJ_s` 開始遊戲', delete_after = 60)
@@ -166,7 +199,7 @@ class BLACKJACK(Cog_Ext):
       if msg.author in participants.keys():
         await msg.channel.send(f"{msg.author.mention}你已參加遊戲", delete_after = 3)
       else:
-        participants.setdefault(msg.author, [0])
+        participants.setdefault(msg.author , [])
         players.append(msg.author)
         await msg.channel.send(f"{msg.author.mention}參加成功", delete_after = 3)
         if len(participants.keys()) == player_num:
@@ -177,17 +210,18 @@ class BLACKJACK(Cog_Ext):
         await msg.delete()
         card = draw(players[turn])
         await msg.channel.send(f"{msg.author.mention} : `{card[0]}` `{card[1]}`")
-        player = participants[players[turn]]
+        player = players[turn]
+        point = point_check(player)
 
-        if player[0] > 21:     #爆牌
-          MSG = ""
-          #await msg.channel.send(f"{msg.author.mention} 爆牌了，手牌: {participants[players[turn]][1:]}，共 `{participants[players[turn]][0]}` 點")
-          MSG += f"{msg.author.mention} 爆牌了，手牌:"
-          for card in player[1:-1]:
-            MSG += f"`{card[0]}` `{card[1]}`、"
-          MSG += f"`{player[-1][0]}` `{player[-1][1]}`，共 `{player[0]}` 點"
+        if len(point) == 1 and point[0] > 21:     #爆牌
+          MSG = f"{msg.author.mention} 爆牌了，手牌:"
+          for card in participants[player]:
+            if card != participants[player][-1]:
+              MSG += f"`{card[0]}` `{card[1]}`、"
+            else:
+              MSG += f"`{card[0]}` `{card[1]}`，共 `{point[0]}` 點"
           await msg.channel.send(MSG)
-          del participants[players[turn]]
+          del participants[player]
 
           if msg.author == initiator:  #莊家爆牌
             Round += 1
@@ -195,11 +229,14 @@ class BLACKJACK(Cog_Ext):
           else:    #閒家爆牌
             turn += 1
             await BLACKJACK.game()
-        '''else:   #21點
-          if participants[players[turn]][0] == 21:
-            await msg.channel.send(f"{msg.author.mention} 21點")
+        elif point == [21]:   #21點
+          await msg.channel.send(f"{msg.author.mention} 21點")
+          if msg.author == initiator:  #莊家
+            Round += 1
+            await BLACKJACK.end_game()
+          else:   #閒家
             turn += 1
-            await BLACKJACK.game()'''
+            await BLACKJACK.game()
 
       elif msg.content.lower() == "next":  #結束加牌
         if msg.author == initiator:   #莊家
@@ -210,11 +247,18 @@ class BLACKJACK(Cog_Ext):
           await BLACKJACK.game()
         await msg.delete()
 
-  @commands.command(aliases = ["p"])
-  async def point(self, ctx):   #查詢點數
+  @commands.command()
+  async def p(self, ctx):   #查詢點數
     global participants
-    if is_started and in_game and ctx.author in participants.keys():
-      await ctx.author.send(f"你的點數為： `{participants[ctx.author][0]} 點`")
+    if is_started and in_game and ctx.author in participants.keys() and ctx.channel == channel:
+      point = point_check(ctx.author)
+      msg = "你的點數可為： "
+      for p in point:
+        if p != point[-1]:
+          msg += f" `{p}` "
+        else:
+          msg += (f" `{p}` 點")
+      await ctx.author.send(msg)
     await ctx.message.delete()
 
   @commands.command()

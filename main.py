@@ -30,6 +30,8 @@ initialization("cmds")
 
 initialization("events")
 
+initialization("games")
+
 if __name__ == "__main__":
     keep_alive()
     bot.run(setting["token"])
