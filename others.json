@@ -37,6 +37,6 @@
 		"+programming": "\u60f3\u5b78\u7a0b\u5f0f?\u63a8\u85a6\u4ee5\u4e0b\u5e7e\u672c\u66f8...",
 		"+loot <n=1> <thing>": "\u767c\u8d77\u62bd\u734e\uff0c\u62bd(n)\u500b\u4eba",
 		"+loot_e": "\u958b\u59cb\u62bd\u734e",
-    "+BJ <n=2> <r=1>": "開始21點遊戲，最多(n)人參加，進行(r)回合"
+    "+BJ <n=2> <r=1>": "開始21點遊戲，最多(n)人參加，進行(r)回合(1 < n <= 10, 1 <= r <= 5)"
 	}
 }

@@ -43,7 +43,8 @@ class Events(Cog_Ext):
 
   @commands.Cog.listener()
   async def on_reaction_remove(self, reaction, user):
-    print(reaction)
+    if not user.bot:
+      print(reaction)
 
   @commands.Cog.listener()
   async def on_command_error(self, ctx, error):
