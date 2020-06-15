@@ -17,6 +17,7 @@ point = readFile("cards")["point"]
 player_num = 0
 Round = 1
 t_round = 0
+join_message_id = 0
 
 
 def draw(player):  #抽牌
@@ -134,7 +135,7 @@ class BLACKJACK(Cog_Ext):
         is_started = False
         participants = {}
       else:
-        await channel.send("遊戲開始，由於bot一定時間內只能發5則訊息，若訊息卡住請稍帶數秒，`+p`可查詢點數")
+        await channel.send("遊戲開始，由於bot一定時間內只能發5則訊息，若訊息卡住請稍待數秒")
         in_game = True
     if is_started and in_game:
       if turn == 0:  #回合開始
@@ -150,9 +151,9 @@ class BLACKJACK(Cog_Ext):
             msg += f"{i+1}.{player.mention} : `{card1[0]}` `{card1[1]}`、`{card2[0]}` `{card2[1]}`\n"
           else:
             await initiator.send(f"暗牌：`{card1[0]}` `{card1[1]}`")
-            msg += f"莊家：{players[-1].mention} : `暗牌不公開`、`{card2[0]}` `{card2[1]}`"
+            msg += f"莊家：{player.mention} : `暗牌不公開`、`{card2[0]}` `{card2[1]}`"
         await channel.send(msg)
-      await channel.send(f'現在是 {players[turn].mention} 的回合，輸入"`draw`"加牌，爆牌/21點/"`next`"結束加牌(遊戲)')
+      await channel.send(f'現在是 {players[turn].mention} 的回合，輸入"`draw`"加牌，爆牌/21點/"`next`"結束加牌(遊戲)，`+p` 查詢點數')
 
   @commands.command(aliases = ["BJ"])
   async def blackjack(self, ctx, n :int =2, r :int =1):
@@ -164,6 +165,7 @@ class BLACKJACK(Cog_Ext):
     global player_num
     global turn
     global t_round
+    global join_message_id
     
     await ctx.message.delete()
     if is_started:
@@ -180,7 +182,36 @@ class BLACKJACK(Cog_Ext):
         participants.setdefault(initiator , [])
         player_num = n
         t_round = r
-        await ctx.send(f'{ctx.author.mention}開始了21點遊戲，預計進行 **{r}** 回合\n輸入"`join`"以加入遊戲，參加人數達到 **{n}** 或遊戲發起人使用指令 `+BJ_s` 開始遊戲', delete_after = 60)
+        msg = await ctx.send(f'{ctx.author.mention}開始了21點遊戲，預計進行 **{r}** 回合\n選取\N{WHITE HEAVY CHECK MARK}或輸入 `join` 參加遊戲，加入後選取\N{NEGATIVE SQUARED CROSS MARK}可退出，參加人數達到 **{n}** 或遊戲發起人使用指令 `+BJ_s` 時開始遊戲')
+        join_message_id = msg.id
+        await msg.add_reaction("\N{WHITE HEAVY CHECK MARK}")
+        await msg.add_reaction("\N{NEGATIVE SQUARED CROSS MARK}")
+
+  @commands.Cog.listener()
+  async def on_reaction_add(self, reaction, user):
+    global join_message_id
+    global participants
+    global players
+    global channel
+    if user != self.bot.user and reaction.message.id == join_message_id and is_started and not in_game:
+      await reaction.remove(user)
+      if str(reaction.emoji) == "\N{WHITE HEAVY CHECK MARK}":
+        if user not in participants.keys():
+          participants.setdefault(user, [])
+          players.append(user)
+          await channel.send(f"{user.mention}參加成功", delete_after = 3)
+          if len(participants.keys()) == player_num:
+            await BLACKJACK.game()
+        else:
+          await channel.send(f"{user.mention}你已在遊戲中", delete_after = 3)
+      elif str(reaction.emoji) == "\N{NEGATIVE SQUARED CROSS MARK}":
+        if user in participants.keys():
+          del participants[user]
+          players.remove(user)
+          await channel.send(f"{user.mention}取消參加成功", delete_after = 3)
+        else:
+          await channel.send(f"{user.mention}你沒有在遊戲中", delete_after = 3)
+        
 
   @commands.Cog.listener()
   async def on_message(self, msg):
@@ -267,6 +298,24 @@ class BLACKJACK(Cog_Ext):
       await BLACKJACK.game()
     else:
       await ctx.send("目前沒有遊戲可以開始或你不是遊戲發起人", delete_after = 5)
+    await ctx.message.delete()
+
+  @commands.command()
+  async def BJ_e(self, ctx):
+    global in_game
+    global is_started
+    global participants
+    global players
+    global Round
+    if is_started and in_game and ctx.author == initiator:
+      await ctx.send("強制結束遊戲成功", delete_after = 3)
+      in_game = False
+      is_started = False
+      participants = {}
+      players = []
+      Round = 1
+    else:
+      await ctx.send("目前沒有遊戲正在進行或你不是遊戲發起人", delete_after = 5)
     await ctx.message.delete()
         
 
