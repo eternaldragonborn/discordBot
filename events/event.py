@@ -27,7 +27,7 @@ class Events(Cog_Ext):
       elif "虫合" in msg.content or "蛤" in msg.content:
         await msg.channel.send(choice_url("what"), delete_after=5)
       elif re.search(r'em{3,}|\N{THINKING FACE}', msg.content.lower()):
-        await msg.channel.send(choice_url("emmm"), delete_after = 10)
+        await msg.channel.send(choice_url("emm"), delete_after = 10)
 
   @commands.command()
   async def loading(self, ctx, delay_time: int = 5):
