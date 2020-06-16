@@ -30,6 +30,8 @@ class Events(Cog_Ext):
         await msg.channel.send(choice_url("emm"), delete_after = 10)
       elif self.bot.user in msg.mentions or f"<@authorId>" == msg.content:
         await msg.channel.send(f"{msg.author.mention} 吼嗚?", delete_after = 5)
+    elif msg.author == self.bot.get_user(709754513602379816):
+      await msg.delete()
 
   @commands.command()
   async def loading(self, ctx, delay_time: int = 5):
@@ -41,10 +43,10 @@ class Events(Cog_Ext):
     await ctx.send(choice_url("programming"), delete_after = 4)
     await ctx.message.delete()
 
-  @commands.Cog.listener()
+  '''@commands.Cog.listener()
   async def on_reaction_remove(self, reaction, user):
     if not user.bot:
-      print(reaction)
+      print(reaction)'''
 
   @commands.Cog.listener()
   async def on_command_error(self, ctx, error):

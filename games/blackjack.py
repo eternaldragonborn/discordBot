@@ -17,7 +17,7 @@ point = readFile("cards")["point"]
 player_num = 0
 Round = 1
 t_round = 0
-join_message_id = 0
+message_id = 0
 
 
 def draw(player):  #抽牌
@@ -128,10 +128,11 @@ class BLACKJACK(Cog_Ext):
     global participants
     global turn
     global Round
+    global message_id
 
     if not in_game and is_started:
       if len(list(participants.keys())) <= 1:
-        await channel.send("遊戲人數不足", delete_after = 5)
+        await channel.send("遊戲人數不足或發起人離開遊戲，遊戲取消", delete_after = 5)
         is_started = False
         participants = {}
       else:
@@ -153,7 +154,12 @@ class BLACKJACK(Cog_Ext):
             await initiator.send(f"暗牌：`{card1[0]}` `{card1[1]}`")
             msg += f"莊家：{player.mention} : `暗牌不公開`、`{card2[0]}` `{card2[1]}`"
         await channel.send(msg)
-      await channel.send(f'現在是 {players[turn].mention} 的回合，輸入"`draw`"加牌，爆牌/21點/"`next`"結束加牌(遊戲)，`+p` 查詢點數')
+      msg = await channel.send(f'現在是 {players[turn].mention} 的回合，\N{SQUARED OK}加牌，爆牌/21點/\N{End with Leftwards Arrow Above}結束加牌(遊戲)，\N{BLACK QUESTION MARK ORNAMENT}查詢點數')
+      message_id = msg.id
+      await msg.add_reaction("\N{SQUARED OK}")
+      await msg.add_reaction("\N{End with Leftwards Arrow Above}")
+      await msg.add_reaction("\N{BLACK QUESTION MARK ORNAMENT}")
+      #await bot.wait_for()
 
   @commands.command(aliases = ["BJ"])
   async def blackjack(self, ctx, n :int =2, r :int =1):
@@ -165,7 +171,7 @@ class BLACKJACK(Cog_Ext):
     global player_num
     global turn
     global t_round
-    global join_message_id
+    global message_id
     
     await ctx.message.delete()
     if is_started:
@@ -182,123 +188,98 @@ class BLACKJACK(Cog_Ext):
         participants.setdefault(initiator , [])
         player_num = n
         t_round = r
-        msg = await ctx.send(f'{ctx.author.mention}開始了21點遊戲，預計進行 **{r}** 回合\n選取\N{WHITE HEAVY CHECK MARK}或輸入 `join` 參加遊戲，加入後選取\N{NEGATIVE SQUARED CROSS MARK}可退出，參加人數達到 **{n}** 或遊戲發起人使用指令 `+BJ_s` 時開始遊戲')
-        join_message_id = msg.id
+        msg = await ctx.send(f'{ctx.author.mention}開始了21點遊戲，預計進行 **{r}** 回合\n選取\N{WHITE HEAVY CHECK MARK}參加遊戲，加入後選取\N{NEGATIVE SQUARED CROSS MARK}可退出，參加人數達到 **{n}** 或遊戲發起人選取\N{Black Right-Pointing Triangle}後開始遊戲')
+        message_id = msg.id
         await msg.add_reaction("\N{WHITE HEAVY CHECK MARK}")
         await msg.add_reaction("\N{NEGATIVE SQUARED CROSS MARK}")
+        await msg.add_reaction("\N{Black Right-Pointing Triangle}")
 
   @commands.Cog.listener()
   async def on_reaction_add(self, reaction, user):
-    global join_message_id
+    global message_id
     global participants
     global players
     global channel
-    if user != self.bot.user and reaction.message.id == join_message_id and is_started and not in_game:
-      await reaction.remove(user)
-      if str(reaction.emoji) == "\N{WHITE HEAVY CHECK MARK}":
-        if user not in participants.keys():
-          participants.setdefault(user, [])
-          players.append(user)
-          await channel.send(f"{user.mention}參加成功", delete_after = 3)
-          if len(participants.keys()) == player_num:
-            await BLACKJACK.game()
-        else:
-          await channel.send(f"{user.mention}你已在遊戲中", delete_after = 3)
-      elif str(reaction.emoji) == "\N{NEGATIVE SQUARED CROSS MARK}":
-        if user in participants.keys():
-          del participants[user]
-          players.remove(user)
-          await channel.send(f"{user.mention}取消參加成功", delete_after = 3)
-        else:
-          await channel.send(f"{user.mention}你沒有在遊戲中", delete_after = 3)
-        
-
-  @commands.Cog.listener()
-  async def on_message(self, msg):
-    global is_started
-    global in_game
     global initiator
-    global participants
-    global channel
     global turn
-    global players
-    global player_num
     global Round
-
-    if msg.content.lower() == "join" and is_started and not in_game and msg.channel == channel:
-      await msg.delete()
-      if msg.author in participants.keys():
-        await msg.channel.send(f"{msg.author.mention}你已參加遊戲", delete_after = 3)
-      else:
-        participants.setdefault(msg.author , [])
-        players.append(msg.author)
-        await msg.channel.send(f"{msg.author.mention}參加成功", delete_after = 3)
-        if len(participants.keys()) == player_num:
-          await BLACKJACK.game()
-
-    elif in_game and msg.channel == channel and msg.author == players[turn]:
-      if msg.content.lower() == "draw":  #加牌
-        await msg.delete()
-        card = draw(players[turn])
-        await msg.channel.send(f"{msg.author.mention} : `{card[0]}` `{card[1]}`")
-        player = players[turn]
-        point = point_check(player)
-
-        if len(point) == 1 and point[0] > 21:     #爆牌
-          MSG = f"{msg.author.mention} 爆牌了，手牌:"
-          for card in participants[player]:
-            if card != participants[player][-1]:
-              MSG += f"`{card[0]}` `{card[1]}`、"
-            else:
-              MSG += f"`{card[0]}` `{card[1]}`，共 `{point[0]}` 點"
-          await msg.channel.send(MSG)
-          del participants[player]
-
-          if msg.author == initiator:  #莊家爆牌
-            Round += 1
-            await BLACKJACK.end_game()
-          else:    #閒家爆牌
-            turn += 1
+    if user != self.bot.user and reaction.message.id == message_id:
+      await reaction.remove(user)
+      if not in_game and is_started:
+        if str(reaction.emoji) == "\N{WHITE HEAVY CHECK MARK}":
+          if user not in participants.keys():
+            participants.setdefault(user, [])
+            players.append(user)
+            await channel.send(f"{user.mention}參加成功", delete_after = 3)
+            if len(participants.keys()) == player_num:
+              await BLACKJACK.game()
+          else:
+            await channel.send(f"{user.mention}你已在遊戲中", delete_after = 3)
+        elif str(reaction.emoji) == "\N{NEGATIVE SQUARED CROSS MARK}":
+          if user == initiator:
+            participants = {}
             await BLACKJACK.game()
-        elif point == [21]:   #21點
-          await msg.channel.send(f"{msg.author.mention} 21點")
-          if msg.author == initiator:  #莊家
+          elif user in participants.keys():
+            del participants[user]
+            players.remove(user)
+            await channel.send(f"{user.mention}取消參加成功", delete_after = 3)
+          else:
+            await channel.send(f"{user.mention}你沒有在遊戲中", delete_after = 3)
+        elif str(reaction.emoji) == "\N{Black Right-Pointing Triangle}":
+          if user == initiator:
+            await BLACKJACK.game()
+          else:
+            await channel.send(f"你不是遊戲發起人" ,delete_after = 5)
+
+      elif in_game:
+        if str(reaction.emoji)  == "\N{SQUARED OK}" and user == players[turn]:  #抽牌
+          card = draw(players[turn])
+          await channel.send(f"{user.mention} : `{card[0]}` `{card[1]}`")
+          point = point_check(user)
+
+          if len(point) == 1 and point[0] > 21:     #爆牌
+            MSG = f"{user.mention} 爆牌了，手牌:"
+            for card in participants[user]:
+              if card != participants[user][-1]:
+                MSG += f"`{card[0]}` `{card[1]}`、"
+              else:
+                MSG += f"`{card[0]}` `{card[1]}`，共 `{point[0]}` 點"
+            await channel.send(MSG)
+            del participants[user]
+
+            if user == initiator:  #莊家爆牌
+              Round += 1
+              await BLACKJACK.end_game()
+            else:    #閒家爆牌
+              turn += 1
+              await BLACKJACK.game()
+          elif point == [21]:   #21點
+            await channel.send(f"{user.mention} 21點")
+            if user == initiator:  #莊家
+              Round += 1
+              await BLACKJACK.end_game()
+            else:   #閒家
+              turn += 1
+              await BLACKJACK.game()
+
+        elif str(reaction.emoji)  == "\N{End with Leftwards Arrow Above}" and user == players[turn]:    #next
+          if user == initiator:   #莊家
             Round += 1
             await BLACKJACK.end_game()
           else:   #閒家
-            turn += 1
+            turn +=1
             await BLACKJACK.game()
-
-      elif msg.content.lower() == "next":  #結束加牌
-        if msg.author == initiator:   #莊家
-          Round += 1
-          await BLACKJACK.end_game()
-        else:   #閒家
-          turn +=1
-          await BLACKJACK.game()
-        await msg.delete()
-
-  @commands.command()
-  async def p(self, ctx):   #查詢點數
-    global participants
-    if is_started and in_game and ctx.author in participants.keys() and ctx.channel == channel:
-      point = point_check(ctx.author)
-      msg = "你的點數可為： "
-      for p in point:
-        if p != point[-1]:
-          msg += f" `{p}` "
+        elif str(reaction.emoji)  == "\N{BLACK QUESTION MARK ORNAMENT}" and user in participants.keys():     #查點數
+          point = point_check(user)
+          msg = "你的點數可為： "
+          for p in point:
+            if p != point[-1]:
+              msg += f" `{p}` 、"
+            else:
+              msg += (f" `{p}` 點")
+          await user.send(msg)
         else:
-          msg += (f" `{p}` 點")
-      await ctx.author.send(msg)
-    await ctx.message.delete()
-
-  @commands.command()
-  async def BJ_s(self, ctx):
-    if is_started and not in_game and ctx.author == initiator:
-      await BLACKJACK.game()
-    else:
-      await ctx.send("目前沒有遊戲可以開始或你不是遊戲發起人", delete_after = 5)
-    await ctx.message.delete()
+          await channel.send(f"{user.mention} 你不在遊戲中或現在不是你的回合")
 
   @commands.command()
   async def BJ_e(self, ctx):
