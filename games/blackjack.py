@@ -5,7 +5,7 @@ from core.wrFiles import readFile
 import random
 
 
-is_started = False    #declear, lots of declear
+is_started = False
 in_game = False
 initiator = ""  #莊家
 participants = {}   #{name : [point, *cards]}  ->  {name : [*cards]}
@@ -17,7 +17,7 @@ point = readFile("cards")["point"]
 player_num = 0
 Round = 1
 t_round = 0
-message_id = 0
+message = 0
 
 
 def draw(player):  #抽牌
@@ -128,8 +128,9 @@ class BLACKJACK(Cog_Ext):
     global participants
     global turn
     global Round
-    global message_id
+    global message
 
+    await message.delete()
     if not in_game and is_started:
       if len(list(participants.keys())) <= 1:
         await channel.send("遊戲人數不足或發起人離開遊戲，遊戲取消", delete_after = 5)
@@ -155,10 +156,10 @@ class BLACKJACK(Cog_Ext):
             msg += f"莊家：{player.mention} : `暗牌不公開`、`{card2[0]}` `{card2[1]}`"
         await channel.send(msg)
       msg = await channel.send(f'現在是 {players[turn].mention} 的回合，\N{SQUARED OK}加牌，爆牌/21點/\N{End with Leftwards Arrow Above}/ `60` 秒後結束加牌(遊戲)，\N{BLACK QUESTION MARK ORNAMENT}查詢點數')
-      message_id = msg.id
+      message = msg
 
       def check(reaction, user):
-        return user == players[turn] and str(reaction.emoji) == "\N{End with Leftwards Arrow Above}" and reaction.message.id == message_id
+        return user == players[turn] and str(reaction.emoji) == "\N{End with Leftwards Arrow Above}" and reaction.message.id == message.id
         
       await msg.add_reaction("\N{SQUARED OK}")
       await msg.add_reaction("\N{End with Leftwards Arrow Above}")
@@ -187,7 +188,7 @@ class BLACKJACK(Cog_Ext):
     global player_num
     global turn
     global t_round
-    global message_id
+    global message
     
     await ctx.message.delete()
     if is_started:
@@ -205,22 +206,32 @@ class BLACKJACK(Cog_Ext):
         player_num = n
         t_round = r
         msg = await ctx.send(f'{ctx.author.mention}開始了21點遊戲，預計進行 **{r}** 回合\n選取\N{WHITE HEAVY CHECK MARK}參加遊戲，加入後選取\N{NEGATIVE SQUARED CROSS MARK}可退出，參加人數達到 **{n}** 或遊戲發起人選取\N{Black Right-Pointing Triangle}後開始遊戲')
-        message_id = msg.id
+        message = msg
         await msg.add_reaction("\N{WHITE HEAVY CHECK MARK}")
         await msg.add_reaction("\N{NEGATIVE SQUARED CROSS MARK}")
         await msg.add_reaction("\N{Black Right-Pointing Triangle}")
+        def check(reaction, user):
+          return str(reaction.emoji) == "\N{Black Right-Pointing Triangle}" and user == initiator
+        try:
+          await self.bot.wait_for("reaction_add", check = check)
+        except:
+          pass
+        else:
+          #await msg.delete()
+          await BLACKJACK.game(self)    ###
 
   @commands.Cog.listener()
   async def on_reaction_add(self, reaction, user):
-    global message_id
+    global message
     global participants
     global players
     global channel
     global initiator
     global turn
     global Round
-    if user != self.bot.user and reaction.message.id == message_id:
-      await reaction.remove(user)
+    if user != self.bot.user and reaction.message.id == message.id:
+      try: await reaction.remove(user)
+      except: pass
       if not in_game and is_started:
         if str(reaction.emoji) == "\N{WHITE HEAVY CHECK MARK}":
           if user not in participants.keys():
@@ -241,11 +252,8 @@ class BLACKJACK(Cog_Ext):
             await channel.send(f"{user.mention}取消參加成功", delete_after = 3)
           else:
             await channel.send(f"{user.mention}你沒有在遊戲中", delete_after = 3)
-        elif str(reaction.emoji) == "\N{Black Right-Pointing Triangle}":
-          if user == initiator:
-            await BLACKJACK.game(self)
-          else:
-            await channel.send(f"你不是遊戲發起人" ,delete_after = 5)
+        elif str(reaction.emoji) != "\N{Black Right-Pointing Triangle}":
+          await channel.send("無效的操作", delete_after = 3)
 
       elif in_game:
         if str(reaction.emoji)  == "\N{SQUARED OK}" and user == players[turn]:  #抽牌
