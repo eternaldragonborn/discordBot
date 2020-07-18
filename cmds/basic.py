@@ -65,6 +65,10 @@ class BASIC(Cog_Ext):
     embed.set_footer(text="就是一隻龍，毫無反應。")
     await ctx.send(embed = embed)
     await ctx.message.delete()
+
+  @commands.command()
+  async def nowtime(self, ctx):
+    await ctx.send(ctx.message.created_at, delete_after = 5)
   
 def setup(bot):
   bot.add_cog(BASIC(bot))

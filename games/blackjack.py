@@ -155,28 +155,10 @@ class BLACKJACK(Cog_Ext):
             await initiator.send(f"暗牌：`{card1[0]}` `{card1[1]}`")
             msg += f"莊家：{player.mention} : `暗牌不公開`、`{card2[0]}` `{card2[1]}`"
         await channel.send(msg)
-      msg = await channel.send(f'現在是 {players[turn].mention} 的回合，\N{SQUARED OK}加牌，爆牌/21點/\N{End with Leftwards Arrow Above}/ `60` 秒後結束加牌(遊戲)，\N{BLACK QUESTION MARK ORNAMENT}查詢點數')
-      message = msg
-
-      def check(reaction, user):
-        return user == players[turn] and str(reaction.emoji) == "\N{End with Leftwards Arrow Above}" and reaction.message.id == message.id
-        
-      await msg.add_reaction("\N{SQUARED OK}")
-      await msg.add_reaction("\N{End with Leftwards Arrow Above}")
-      await msg.add_reaction("\N{BLACK QUESTION MARK ORNAMENT}")
-      try:
-        await self.bot.wait_for("reaction_add", timeout = 60, check = check)
-      except:
-        await channel.send("超過時間，強制換下一位玩家")
-      else:
-        pass
-      finally:
-        if players[turn] == initiator:   #莊家
-          Round += 1
-          await BLACKJACK.end_game(self)
-        else:   #閒家
-          turn +=1
-          await BLACKJACK.game(self)
+      message = await channel.send(f'現在是 {players[turn].mention} 的回合，\N{SQUARED OK}加牌，爆牌/21點/\N{End with Leftwards Arrow Above}結束加牌(遊戲)，\N{BLACK QUESTION MARK ORNAMENT}查詢點數')
+      await message.add_reaction("\N{SQUARED OK}")
+      await message.add_reaction("\N{End with Leftwards Arrow Above}")
+      await message.add_reaction("\N{BLACK QUESTION MARK ORNAMENT}")
 
   @commands.command(aliases = ["BJ"])
   async def blackjack(self, ctx, n :int =2, r :int =1):
@@ -229,10 +211,10 @@ class BLACKJACK(Cog_Ext):
     global initiator
     global turn
     global Round
-    if user != self.bot.user and reaction.message.id == message.id:
+    if is_started and user != self.bot.user and reaction.message.id == message.id:
       try: await reaction.remove(user)
       except: pass
-      if not in_game and is_started:
+      if not in_game:
         if str(reaction.emoji) == "\N{WHITE HEAVY CHECK MARK}":
           if user not in participants.keys():
             participants.setdefault(user, [])
@@ -285,6 +267,13 @@ class BLACKJACK(Cog_Ext):
             else:   #閒家
               turn += 1
               await BLACKJACK.game(self)
+        elif str(reaction.emoji)  == "\N{End with Leftwards Arrow Above}" and user == players[turn]:    #next
+          if user == initiator:   #莊家
+            Round += 1
+            await BLACKJACK.end_game(self)
+          else:   #閒家
+            turn +=1
+            await BLACKJACK.game(self)
 
         elif str(reaction.emoji)  == "\N{BLACK QUESTION MARK ORNAMENT}" and user in participants.keys():     #查點數
           point = point_check(user)

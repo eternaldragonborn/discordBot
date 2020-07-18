@@ -2,6 +2,11 @@ import discord
 from discord.ext import commands
 from core.classes import Cog_Ext
 
+def t(mention):
+  if "!" in mention:
+    mention = mention.replace("!", "")
+  print(mention)
+
 class CLEAN(Cog_Ext):
   @commands.command()
   async def clean(self, ctx, limit :int =999, target :int =719120395571298336):
@@ -38,12 +43,14 @@ class CLEAN(Cog_Ext):
     
 
   @commands.command()
-  async def test(self, ctx, times :int=1):
+  async def test(self, ctx, mention):
     if await self.bot.is_owner(ctx.author):
-      for i in range(times):
-        await ctx.send("This is for test.")
+      '''for i in range(times):
+        await ctx.send("This is for test.")'''
       '''if msg == self.bot.get_user(authorId).mention:
         await ctx.send("y")'''
+      print(mention)
+      t(mention)
     await ctx.message.delete()
 
 def setup(bot):

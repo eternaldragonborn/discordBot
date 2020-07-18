@@ -22,7 +22,7 @@
 		"https://i.imgur.com/rMfjBLQ.gifv": 4,
 		"https://i.imgur.com/qnG94J9.gifv": 3,
 		"https://i.imgur.com/R03kmWs.gifv": 4
-  },
+	},
 	"programming": {
 		"https://i.imgur.com/V7RwtXP.jpg": 1,
 		"https://i.imgur.com/tzn1gLp.jpg": 1,
@@ -37,6 +37,10 @@
 		"+programming": "\u60f3\u5b78\u7a0b\u5f0f?\u63a8\u85a6\u4ee5\u4e0b\u5e7e\u672c\u66f8...",
 		"+loot <n=1> <thing>": "\u767c\u8d77\u62bd\u734e\uff0c\u62bd(n)\u500b\u4eba",
 		"+loot_e": "\u958b\u59cb\u62bd\u734e",
-    "+BJ <n=2> <r=1>": "開始21點遊戲，最多(n)人參加，進行(r)回合(1 < n <= 10, 1 <= r <= 5)"
+		"+BJ <n=2> <r=1>": "\u958b\u59cb21\u9ede\u904a\u6232\uff0c\u6700\u591a(n)\u4eba\u53c3\u52a0\uff0c\u9032\u884c(r)\u56de\u5408(1 < n <= 10, 1 <= r <= 5)"
+	},
+	"not": {
+		"https://i.imgur.com/wPlIu0B.jpg": 1,
+		"https://i.imgur.com/LSg9JN5.jpg": 1
 	}
 }
