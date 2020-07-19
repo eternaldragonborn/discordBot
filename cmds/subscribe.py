@@ -25,28 +25,28 @@ def date_vaild(date):
     return date <= (datetime.date.today() + datetime.timedelta(hours= 8))
 
 async def print_overview(self, data):
-    setting = readFile("setting")
-    message = "訂閱總覽(如需更改請告知管理者，繪師名中的空格皆以_取代)\n>>> "
-    for subscriber, content in data["subscribers"].items():
-      message+=f"{subscriber}："
-      if len(content[2:]) == 0:
-        message += "\n"
-      for artist in content[2:]:
-        if artist != content[-1]:
-          message+=f"`{artist}`{data['artists'][artist][2]}、"
-        else:
-          message+=f"`{artist}`{data['artists'][artist][2]}\n"
-    if message == "":
-      message = "` `"
-    try:
-      overview = await self.bot.get_channel(675956755112394753).fetch_message(setting["overview"])
-    except:
-      msg = await self.bot.get_channel(675956755112394753).send(message)
-      await msg.pin()
-      setting["overview"] = msg.id
-      writeFile("setting", setting)
-    else:
-      await overview.edit(content = message)
+  setting = readFile("setting")
+  message = "訂閱總覽(如需更改請告知管理者，繪師名中的空格皆以_取代)\n>>> "
+  for subscriber, content in data["subscribers"].items():
+    message+=f"{subscriber}："
+    if len(content[2:]) == 0:
+      message += "\n"
+    for artist in content[2:]:
+      if artist != content[-1]:
+        message+=f"`{artist}`{data['artists'][artist][2]}、"
+      else:
+        message+=f"`{artist}`{data['artists'][artist][2]}\n"
+  if message == "":
+    message = "` `"
+  try:
+    overview = await self.bot.get_channel(675956755112394753).fetch_message(setting["overview"])
+  except:
+    msg = await self.bot.get_channel(675956755112394753).send(message)
+    await msg.pin()
+    setting["overview"] = msg.id
+    writeFile("setting", setting)
+  else:
+    await overview.edit(content = message)
 
 class SUBSCRIBE(Cog_Ext):
 
@@ -196,10 +196,6 @@ class SUBSCRIBE(Cog_Ext):
         await ctx.send(f"{data['artists'][artist][0]} 更新了 `{artist}`\n預覽：{data['subscribers'][ctx.author.mention][0]}\n下載：{data['subscribers'][ctx.author.mention][1]}")
     else:
       await ctx.send(f"你不是 `{artist}` 的訂閱者", delete_after = 5)
-
-  """@commands.command()
-  async def stopUpdate(self, ctx, name):    #停更
-    pass"""
   
   @commands.command(aliases = ["resub"])
   async def change_subscriber(self, ctx, artist, newSubscriber):
@@ -317,13 +313,25 @@ class SUBSCRIBE(Cog_Ext):
           message += f"`{artist}`( {content[0]} )：{content[1]}\n"
       await ctx.send(message)
     await ctx.message.delete()
+
+  @commands.command()
+  async def noupdate(self, ctx, artist):
+    await ctx.message.delete()
+    data = get_data()
+    if ctx.author.id in manager or ctx.author.mention == data["artists"][artist][0]:
+      data["artists"][artist][1] = (ctx.message.created_at + datetime.timedelta(hours= 8)).strftime("%Y-%m-%d")
+      try:
+        set_data(data)
+      except Exception as e:
+        await ctx.send(f"更新錯誤， {e}", delete_after = 5)
+        print(e)
+      else:
+        await ctx.send(f"`{artist}` 本月沒有更新")
+    else:
+      await ctx.send(f"你不是 `{artist}` 的訂閱者", delete_after = 5)
   
   @commands.command()
-  async def info(self, ctx):
-    pass
-  
-  @commands.command()
-  async def edit_artist(self, ctx, originalName, newName):
+  async def edit_artist(self, ctx, item, content):
     pass
 
   @commands.Cog.listener()
@@ -332,23 +340,29 @@ class SUBSCRIBE(Cog_Ext):
     if message.id == setting["overview"]:
       setting["overview"] = 0
       writeFile("setting", setting)
+    elif message.id == setting["info"]:
+      setting["info"] = 0
+      writeFile("setting", setting)
 
   @commands.command()
   async def upload(self, ctx):
+    await ctx.message.delete()
     if await self.bot.is_owner(ctx.author):
-      data = readFile("subscribe&update")
+      data = readFile("subscribeData")
       try:
         set_data(data)
       except Exception as e:
         print(e)
       else:
+        await print_overview(self, data)
         await ctx.send("上傳完成", delete_after = 5)
 
   @commands.command()
   async def pull(self, ctx):
+    await ctx.message.delete()
     if await self.bot.is_owner(ctx.author):
       data = get_data()
-      writeFile("subscribe&update", data)
+      writeFile("subscribeData", data)
 
 def setup(bot):
   bot.add_cog(SUBSCRIBE(bot))
