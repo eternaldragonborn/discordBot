@@ -11,4 +11,3 @@ poetry.lock
 pyproject.toml
 __pycache__/
 test.py
-subscribe&update.json
