@@ -12,3 +12,4 @@ pyproject.toml
 __pycache__/
 test.py
 subscribeData.json
+record.txt
