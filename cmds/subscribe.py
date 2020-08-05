@@ -6,7 +6,7 @@ from core.wrFiles import readFile, writeFile, get_data, set_data
 import re
 #from redis import Redis, ConnectionPool
 
-# {artists : {author : [subscriber, lastUpdate, mark]},
+# {artists : {author : [subscriber, lastUpdate, mark, type(0:繪師, 1:遊戲繪師)]},
 #  subscribers : {subscriber : [preview_url, download_url, artist...]}}
 manager = [590430031281651722, 384233645621248011, 546614210243854337]
 
@@ -29,9 +29,13 @@ def date_valid(date):
     date = datetime.date.fromisoformat(date)
   except Exception as e:
     print(e)
-    return False
+    raise "format_error"
+    #return False
   else:
-    return date <= (datetime.datetime.now(tz).date())
+    if not date <= (datetime.datetime.now(tz).date()):
+      raise "日期不合理"
+    else:
+      return True
 
 async def print_overview(self, data):
   setting = readFile("setting")
@@ -107,7 +111,7 @@ class SUBSCRIBE(Cog_Ext):
     await ctx.send("沒有權限或無此ID", delete_after = 5)'''
   
   @commands.command(aliases = ["sub"])
-  async def subscribe(self, ctx, subscriber, artist, lastUpdate=datetime.datetime.now(tz).strftime("%m-%d"), *, mark=""):
+  async def subscribe(self, ctx, subscriber, artist, lastUpdate=(datetime.datetime.now(tz)-datetime.timedelta(days = 30)).strftime("%m-%d"), *, mark=""):
     global manager
     await ctx.message.delete()
     if ctx.author.id in manager and mention_valid(subscriber) and (ctx.channel.id == 681543745824620570 or ctx.channel.id == 675956755112394753):
@@ -121,10 +125,12 @@ class SUBSCRIBE(Cog_Ext):
         lastUpdate = f"{datetime.datetime.now(tz).year}-{lastUpdate}"
         if mark:
           mark = f"({mark})"
-        if not date_valid(lastUpdate):
-          await ctx.send("日期格式錯誤或不合理", delete_after = 5)
+        try:
+          date_valid(lastUpdate)
+        except:
+          await ctx.send("日期格式(mm-dd)錯誤或不合理", delete_after = 5)
         else:
-          new_subscribe = {artist : [subscriber, lastUpdate, mark]}
+          new_subscribe = {artist : [subscriber, lastUpdate, mark, 0]}
           msg = await ctx.send(f"請確認 {subscriber} 訂閱 `{artist}`{mark}，最後更新於 {lastUpdate}")
           await msg.add_reaction("\N{WHITE HEAVY CHECK MARK}")
           await msg.add_reaction("\N{CROSS MARK}")
@@ -147,7 +153,7 @@ class SUBSCRIBE(Cog_Ext):
               await ctx.send(f"新增錯誤， {e}", delete_after = 5)
               print(e)
             else:
-              await record(self, f"{subscriber} 訂閱了 `{artist}`(by {ctx.author.mention}")
+              await record(self, f"{subscriber} 訂閱了 `{artist}`(by {ctx.author.mention})")
               await print_overview(self, data)
               await ctx.send("新增完畢", delete_after = 5)
           finally:
@@ -175,7 +181,8 @@ class SUBSCRIBE(Cog_Ext):
         except:
           await ctx.send("刪除資料取消", delete_after = 5)
         else:
-          data["subscribers"][data['artists'][artist][0]].remove(artist)
+          subscriber = data['artists'][artist][0]
+          data["subscribers"][subscriber].remove(artist)
           del data["artists"][artist]
           try:
             set_data(data)
@@ -184,7 +191,7 @@ class SUBSCRIBE(Cog_Ext):
             await ctx.send(f"刪除錯誤， {e}", delete_after = 5)
             print(e)
           else:
-            await record(self, f"{data['artists'][artist][0]} 取消訂閱 `{artist}`(by {ctx.author.mention})")
+            await record(self, f"{subscriber} 取消訂閱 `{artist}`(by {ctx.author.mention})")
             await print_overview(self, data)
             await ctx.send("刪除資料完畢", delete_after = 5)
         finally:
@@ -197,13 +204,17 @@ class SUBSCRIBE(Cog_Ext):
     await ctx.message.delete()
     data = get_data()
     if artist in data["artists"].keys():
-      if (ctx.author.id in manager or ctx.author.id == int(data["artists"][artist][0][2:-1])) or ctx.channel.id == 681543745824620570:
+      if (ctx.author.id in manager or ctx.author.id == int(data["artists"][artist][0][2:-1])) and ctx.channel.id == 681543745824620570:
         date = f"{datetime.datetime.now(tz).year}-{date}"
         subscriber = data['artists'][artist][0]
-        if not date_valid(date):
-          await ctx.send("日期錯誤", delete_after = 5)
+        try:
+          date_valid(date)
+        except:
+          await ctx.send("日期格式(mm-dd)錯誤或不合理", delete_after = 5)
         else:
           data["artists"][artist][1] = date
+          if data["artists"][artist][3] != 1:
+            data["artists"][artist][3] = 0
           try:
             set_data(data)
           except Exception as e:
@@ -330,24 +341,27 @@ class SUBSCRIBE(Cog_Ext):
   async def check(self, ctx):
     global manager
     if ctx.author.id in manager and ctx.channel.id == 681543745824620570:
-      message = "本月尚未更新：\n>>> "
+      message = "超過30天（含）未更新：\n>>> "
+      #message = "本月尚未更新：\n>>> "
       data = get_data()
       for subscriber, content in data["subscribers"].items():
         notupdate = []
         for artist in content[2:]:
           lastupdate = datetime.date.fromisoformat(data["artists"][artist][1])
-          if lastupdate.month < datetime.date.today().month:
-            notupdate.append([artist, lastupdate])
+          since_lastupdate = datetime.datetime.now(tz).date() - lastupdate
+          if since_lastupdate >= datetime.timedelta(days = 30) and data['artists'][artist][3] != 1:
+          #if lastupdate.month < datetime.datetime.now(tz).month:
+            notupdate.append([artist, lastupdate.strftime("%m-%d")])
         if notupdate:
-          message += f"{subscriber}:"
+          message += f"{subscriber}："
           for info in notupdate:
-            message += f"`{info[0]}`({info[1]})"
+            message += f"`{info[0]}`（{info[1]}）"
             if info != notupdate[-1]:
               message += "、"
             else:
               message += "\n"
       await ctx.send(message)
-      await ctx.send("\b若已更新但還是在清單中，請確認更新時使用指令`+update 繪師`")
+      await ctx.send("若已更新但還是在清單中，請確認更新時使用指令`+update 繪師`")
     await ctx.message.delete()
 
   @commands.command()
@@ -355,8 +369,10 @@ class SUBSCRIBE(Cog_Ext):
     await ctx.message.delete()
     data = get_data()
     if artist in data["artists"].keys():
-      if ctx.author.id in manager or ctx.author.id == int(data["artists"][artist][0][2:-1]):
+      if ctx.author.id in manager or ctx.author.id == int(data["artists"][artist][0][2:-1]) and ctx.channel.id == 681543745824620570:
         data["artists"][artist][1] = (ctx.message.created_at + datetime.timedelta(hours= 8)).strftime("%Y-%m-%d")
+        if data["artists"][artist][3] != 1:
+          data["artists"][artist][3] = 2
         try:
           set_data(data)
         except Exception as e:
@@ -403,6 +419,39 @@ class SUBSCRIBE(Cog_Ext):
     if await self.bot.is_owner(ctx.author):
       data = get_data()
       writeFile("subscribeData", data)
+
+  @commands.command()
+  async def info(self, ctx, target):
+    await ctx.message.delete()
+    if ctx.channel.id == 681543745824620570:
+      data = get_data()
+      if target in data['subscribers']:
+        message = f"{target}：\n>>> "
+        message += "訂閱繪師："
+        for artist in data['subscribers'][target][2:]:
+          message += f" `{artist}`{data['artists'][artist][2]} "
+          if artist == data['subscribers'][target][-1]:
+            message += "\n"
+          else:
+            message += "、"
+        message += f"預覽：{data['subscribers'][target][0]}\n下載：{data['subscribers'][target][1]}"
+        await ctx.send(message, delete_after = 15)
+      elif target in data['artists']:
+        subscriber, lastupdate, mark, status = data['artists'][target]
+        message = f"`{target}`{mark}：\n>>> 訂閱者： {subscriber}\n更新狀態："
+        if datetime.date.fromisoformat(lastupdate).month == datetime.datetime.now(tz).month:
+          if status == 0:
+            message += "本月已更新"
+          elif status == 2:
+            message += "繪師本月無更新"
+        else:
+          message += f"本月尚未更新，上次更新日期為 {lastupdate}"
+        message += f"\n預覽：{data['subscribers'][subscriber][0]}\n下載：{data['subscribers'][subscriber][1]}"
+        await ctx.send(message, delete_after = 15)
+      else:
+        await ctx.send(f"無 {target} 的資料", delete_after = 5)
+    else:
+      await ctx.send("頻道錯誤", delete_after = 5)
 
 def setup(bot):
   bot.add_cog(SUBSCRIBE(bot))
