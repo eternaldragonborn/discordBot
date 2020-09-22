@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 from core.classes import Cog_Ext
 from core.wrFiles import readFile
+import datetime
 
 authorId = readFile("setting")["authorId"]
 botId = readFile("setting")["botId"]
@@ -65,10 +66,11 @@ class BASIC(Cog_Ext):
     embed.set_footer(text="就是一隻龍，毫無反應。")
     await ctx.send(embed = embed)
     await ctx.message.delete()
-
+  
   @commands.command()
   async def nowtime(self, ctx):
-    await ctx.send(ctx.message.created_at, delete_after = 5)
+    tz = datetime.timezone(datetime.timedelta(hours=8))
+    await ctx.send(datetime.datetime.now(tz))
   
 def setup(bot):
   bot.add_cog(BASIC(bot))

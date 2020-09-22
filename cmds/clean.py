@@ -14,8 +14,8 @@ class CLEAN(Cog_Ext):
       return msg.author.id == target
     if await self.bot.is_owner(ctx.author) or target == self.bot.id:
       await ctx.message.delete()
-      count = await ctx.channel.purge(check = judge, limit = limit)
-      await ctx.send(f"清除了 {len(count)} 條訊息", delete_after = 5)
+      count = len(await ctx.channel.purge(check = judge, limit = limit))
+      await ctx.send(f"清除了 {(count)} 條訊息", delete_after = 5)
     else:
       await ctx.send("You don't have permission or target is not a user.", delete_after = 3)
       await ctx.message.delete()
@@ -33,8 +33,10 @@ class CLEAN(Cog_Ext):
       except:
         await ctx.send("超出時間，指令取消", delete_after = 3)
       else:
-        count = len(await ctx.channel.purge(limit = None))
-        await ctx.send(f"清除了 {len(count)} 條訊息", delete_after = 5)
+        def check(message : discord.Message):
+          return not message.pinned
+        count = len(await ctx.channel.purge(check = check, limit = None))
+        await ctx.send(f"清除了 {(count)} 條訊息", delete_after = 5)
       #reaction, user = await self.bot.wait_for("reaction_add", timeout = 5, check = check)
       #print(reaction)
     else:
