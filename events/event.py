@@ -13,7 +13,7 @@ def choice_url(item):
   url = readFile("others")[item]
   return str(random.choices(list(url.keys()), weights = list(url.values()))).strip("[]'")
 
-SAO = re.compile('星[\~` ]*[爆暴]|c8763|star(\s)*burst|[(10)十]\s*[秒(sec)]|[(星光)(西瓜)(\N{WATERMELON})] *([流榴][槤蓮連]) *[擊雞機(\N{ROOSTER})]|桐([谷古][和核])?[人仁]|kirito|當我.?.?第[二2].|艾恩葛朗特')
+SAO = re.compile('星[\~` ]*[爆暴]|c8763|star(\s)*burst|(10|十)(\s)*(秒|sec)|((星光)|(西瓜)|(\N{WATERMELON})) *([流榴][槤蓮連]) *[擊雞機(\N{ROOSTER})]|桐([谷古][和核])?[人仁]|kirito|當我.?.?第[二2].|艾恩葛朗特')
 
 class Events(Cog_Ext):
   @commands.Cog.listener()
@@ -27,7 +27,7 @@ class Events(Cog_Ext):
         await msg.add_reaction("\N{THUMBS DOWN SIGN}")
       if "虫合" in msg.content or "蛤" in msg.content:
         await msg.channel.send(choice_url("what"), delete_after=5)
-      if re.search(r'em{3,}|\N{THINKING FACE}', msg.content.lower()):
+      if re.search(r'[he]m{3,}|\N{THINKING FACE}', msg.content.lower()):
         await msg.channel.send(choice_url("emm"), delete_after = 10)
       if self.bot.user in msg.mentions:
         await msg.channel.send(f"{msg.author.mention} 吼嗚?", delete_after = 5)
