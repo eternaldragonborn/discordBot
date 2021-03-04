@@ -1,14 +1,25 @@
-import json
+#import json
 import discord
 from discord.ext import commands
 from core.keep_alive import keep_alive
 import os
+from replit import db
+import logging
+
+logger = logging.getLogger('discord')
+logger.setLevel(logging.WARNING)
+formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s')
+error_log = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='a')
+error_log.setFormatter(formatter)
+logger.addHandler(error_log)
 
 bot = commands.Bot(command_prefix='+', owner_id = 384233645621248011)
 bot.remove_command("help")
 
-with open("setting.json", "r", encoding= "utf8") as jsettings:
-    setting = json.load(jsettings)
+'''with open("setting.json", "r", encoding= "utf8") as jsettings:
+    setting = json.load(jsettings)'''
+token = db['token']
+#token = ""
 
 @bot.event
 async def on_ready():
@@ -34,4 +45,7 @@ initialization("games")
 
 if __name__ == "__main__":
     keep_alive()
-    bot.run(setting["token"])
+    try:
+      bot.run(token)
+    except Exception as e:
+      print(e)

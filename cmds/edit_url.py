@@ -7,7 +7,7 @@ urls = core.wrFiles.readFile("others")
 authorId = core.wrFiles.readFile("setting")["authorId"]
 
 class EDIT_URL(Cog_Ext):
-  @commands.command()
+  @commands.command(hidden = True, usage = "+add_url 分類 網址 <權重>")
   async def add_url(self, cxt, item, url, weight :int=1):
     if cxt.author.id == authorId:
       if item in urls.keys():
@@ -32,7 +32,7 @@ class EDIT_URL(Cog_Ext):
       core.wrFiles.writeFile("others", urls)
     await cxt.message.delete()
 
-  @commands.command()
+  @commands.command(hidden = True, usage = "+del_url 分類 <網址>")
   async def del_url(self, cxt, item, url=""):
     if cxt.author.id == authorId:
       if url == "":
@@ -53,8 +53,8 @@ class EDIT_URL(Cog_Ext):
           core.wrFiles.writeFile("others", urls)
     await cxt.message.delete()
 
-  @commands.command()
-  async def edit_weight(self, ctx, item, url, weight :int):
+  @commands.command(hidden = True, usage = "+edit_weight 分類 網址 權重")
+  async def edit_url(self, ctx, item, url, weight :int):
     if ctx.author.id == authorId:
       try:
         urls[item][url] = weight

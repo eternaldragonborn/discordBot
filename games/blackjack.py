@@ -8,7 +8,7 @@ import random
 is_started = False
 in_game = False
 initiator = ""  #莊家
-participants = {}   #{name : [point, *cards]}  ->  {name : [*cards]}
+participants = {}
 channel = ""  #遊玩的頻道
 turn = 0
 cards = []

@@ -42,12 +42,32 @@
 	},
 	"not": {
 		"https://i.imgur.com/wPlIu0B.jpg": 1,
-		"https://i.imgur.com/LSg9JN5.jpg": 1
+		"https://i.imgur.com/LSg9JN5.jpg": 1,
+		"https://i.imgur.com/cWOYOCA.jpg": 1
 	},
 	"yeah": {
 		"http://imgur.com/a/wEQQkDE.jpg": 1
 	},
 	"pie": {
 		"http://imgur.com/a/RTPG1JW.jpg": 1
-	}
+	},
+	"monkey": {
+		"<@226340174483816449>": 0,
+		"<@564414176408109062>": 0,
+		"\u54ea\u4f86\u7684\u7334\u5b50": 2,
+		"<@&767010698701307904>": 0,
+		"https://i.imgur.com/0AKZQEe.jpg": 2
+	},
+  "an-jia": {
+    "coin": [
+      "<:coin02:811230937274122250>",
+      "<:coin01:811230937106481173>"
+    ],
+    "bzz": [
+      "<:bzz04:811230937273729065>",
+      "<:bzz03:811230936934907936>",
+      "<:bzz02:811230937224183818>",
+      "<:bzz01:811230937000968204>"
+    ]
+  }
 }

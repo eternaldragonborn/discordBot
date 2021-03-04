@@ -8,7 +8,7 @@ def t(mention):
   print(mention)
 
 class CLEAN(Cog_Ext):
-  @commands.command()
+  @commands.command(usage = "+clean <最大數量>", help = "清理bot的訊息")
   async def clean(self, ctx, limit :int =999, target :int =719120395571298336):
     def judge(msg :discord.Message) -> bool:
       return msg.author.id == target
@@ -20,7 +20,7 @@ class CLEAN(Cog_Ext):
       await ctx.send("You don't have permission or target is not a user.", delete_after = 3)
       await ctx.message.delete()
 
-  @commands.command()
+  @commands.command(hidden = True)
   async def clean_channel(self, ctx):
     def check(reaction, user):
       return user == ctx.author and reaction.message.id == msg.id and str(reaction.emoji) == "\N{WHITE HEAVY CHECK MARK}"
@@ -43,17 +43,6 @@ class CLEAN(Cog_Ext):
       await ctx.message.delete()
       await ctx.send("You don't have permission or you are not in the target channel.", delete_after = 3)
     
-
-  @commands.command()
-  async def test(self, ctx, mention):
-    if await self.bot.is_owner(ctx.author):
-      '''for i in range(times):
-        await ctx.send("This is for test.")'''
-      '''if msg == self.bot.get_user(authorId).mention:
-        await ctx.send("y")'''
-      print(mention)
-      t(mention)
-    await ctx.message.delete()
 
 def setup(bot):
   bot.add_cog(CLEAN(bot))

@@ -6,10 +6,16 @@ from core.wrFiles import readFile, writeFile, get_data, set_data
 import re
 
 tz = datetime.timezone(datetime.timedelta(hours=8))
+def get_time(): 
+  return datetime.datetime.now(tz)
 
-def auth(ctx):
-  return (ctx.channel.category_id in [719132688392519720, 696655511197712414] and ctx.channel.id != 675956755112394753) \
-    and ctx.author.id in [590430031281651722, 384233645621248011, 546614210243854337]
+async def auth(ctx):
+  if (ctx.channel.category_id in [719132688392519720, 696655511197712414] and ctx.channel.id != 675956755112394753) \
+    and ctx.author.id in [590430031281651722, 384233645621248011, 546614210243854337]:
+    return True
+  else:
+    await ctx.send("沒有權限或頻道錯誤，有疑問請詢問管理員")
+    return False
 
 def author_auth(ctx, target):
   return (ctx.channel.category_id in [719132688392519720, 696655511197712414] and ctx.channel.id != 675956755112394753) \
@@ -44,17 +50,16 @@ async def date_valid(ctx, date):
   try:
     date = datetime.date.fromisoformat(date)
   except:
-    await ctx.send("日期格式（MM-DD）錯誤", delete_after = 5)
+    await ctx.send("日期格式（MM-DD）錯誤(括弧不須輸入)", delete_after = 5)
     return False
   else:
-    if not date <= (datetime.datetime.now(tz).date()):
+    if not date <= (get_time().date()):
       await ctx.send("日期不合理", delete_after = 5)
       return False
     else:
       return True
 
 async def change_data(self, ctx, data, message=None):
-  time = datetime.datetime.now(tz)
   try:
     set_data(data)
   except Exception as e:
@@ -65,7 +70,7 @@ async def change_data(self, ctx, data, message=None):
     await ctx.send("更改完成", delete_after = 5)
     await print_overview(self, data)
     if message:
-      await self.bot.get_channel(740196718477312061).send(f"{time.date()}\t{message}")
+      await self.bot.get_channel(740196718477312061).send(f"{get_time().date()}\t{message}")
     return True
 
 async def action_check(self, msg, author):
@@ -99,6 +104,8 @@ class Subscriber():
   def print_url(self):
     if self.__url[0]:  return f"預覽：\n{self.__url[0]}\n下載：\n{self.__url[1]}"
     else:  return f"預覽：無\n下載：\n{self.__url[1]}"
+  def DLurl(self):
+    return self.__url[1]
     
 class Artist():
   def __init__(self, artist, data):
@@ -120,10 +127,10 @@ class Artist():
 
 class SUBSCRIBE(Cog_Ext):
 
-  @commands.command(aliases = ["add_suber"])
+  @commands.command(aliases = ["add_suber"], usage = "+add_suber 訂閱者 下載網址 <預覽網址>", help = "新增訂閱者")
   async def new_subscriber(self, ctx, subscriber, download_url, preview_url=None):
     await ctx.message.delete()
-    if auth(ctx):
+    if await auth(ctx):
       data = get_data()
       subscriber = subscriber.replace("!", "")
       if subscriber in data["subscribers"].keys():
@@ -131,14 +138,16 @@ class SUBSCRIBE(Cog_Ext):
       else:
         subscriberData = Subscriber(subscriber, {subscriber : [preview_url, download_url, []]})
         subscriberData.update_data(data)
-        await change_data(self, ctx, data, f"新訂閱者；{subscriber}(by {ctx.author.mention})")
+        message = f"新訂閱者:{subscriber}(by {ctx.author.mention})"
+        await ctx.send(message)
+        await change_data(self, ctx, data, message)
     else:
       await ctx.send("沒有權限", delete_after = 5)
 
-  @commands.command(aliases = ["del_suber"])
+  @commands.command(aliases = ["del_suber"], usage= "+del_suber 訂閱者", help= "刪除訂閱者資料(包含其訂閱的繪師)")
   async def delete_subscriber(self, ctx, subscriber):
     await ctx.message.delete()
-    if auth(ctx):
+    if await auth(ctx):
       data = get_data()
       subscriber = subscriber.replace("!","")
       if subscriber in data["subscribers"].keys():
@@ -149,13 +158,15 @@ class SUBSCRIBE(Cog_Ext):
           for artist in target.artists:
             message += f"`{artist}`"
             if artist != target.artists[-1]:
-              message += f"、"
+              message += "、"
         msg = await ctx.send(message)
         if await action_check(self, msg, ctx.author):
           for artist in target.artists:
             del data["artists"][artist]
           del data["subscribers"][subscriber]
-          await change_data(self, ctx, data, f"{ctx.author.mention} 刪除了 {subscriber} 的資料")
+          message = f"訂閱紀錄：{ctx.author.mention} 刪除了 {subscriber} 的資料"
+          await ctx.send(message)
+          await change_data(self, ctx, data, message)
         else:
           await ctx.send("刪除訂閱者資料取消", delete_after = 5)
         await msg.delete()
@@ -164,14 +175,13 @@ class SUBSCRIBE(Cog_Ext):
     else:
       await ctx.send("沒有權限", delete_after = 5)
 
-  @commands.command(aliases = ["sub"])
+  @commands.command(aliases = ["sub"], usage = "+sub 訂閱者 繪師 <備註>", help= "新增訂閱，若有備註會顯示於繪師名後方")
   async def subscribe(self, ctx, subscriber, artist, mark=""):
     await ctx.message.delete()
-    if auth(ctx):
-      lastUpdate=(datetime.datetime.now(tz)-datetime.timedelta(days = 31)).strftime("%Y-%m-%d")
+    if await auth(ctx):
+      lastUpdate=(get_time()-datetime.timedelta(days = 31)).strftime("%Y-%m-%d")
       subscriber = subscriber.replace("!", "")
       data = get_data()
-      #artist = artist.title()
       if artist in data["artists"].keys():
         await ctx.send(f"繪師 `{artist}` 已有訂閱紀錄", delete_after = 5)
       elif subscriber not in data["subscribers"].keys():
@@ -187,17 +197,18 @@ class SUBSCRIBE(Cog_Ext):
           new_subscribe.update_data(data)
           target = Subscriber(subscriber, data["subscribers"])
           target.add_artist(artist, data)
-          await change_data(self, ctx, data, f"{subscriber} 訂閱了 `{artist}`(by{ctx.author.mention})")
+          message = f"訂閱紀錄：{subscriber} 訂閱了 `{artist}`(by{ctx.author.mention})"
+          await ctx.send(message)
+          await change_data(self, ctx, data, message)
       await msg.delete()
     else:
       await ctx.send("沒有權限或無此ID", delete_after = 5)
 
-  @commands.command(aliases = ["unsub"])
+  @commands.command(aliases = ["unsub"], usage = "+unsub 繪師", help= "退訂繪師")
   async def unsubscribe(self, ctx, artist):
     await ctx.message.delete()
-    if auth(ctx):
+    if await auth(ctx):
       data = get_data()
-      #artist = artist.title()
       if artist in data["artists"].keys():
         msg = await ctx.send(f"請確認 {data['artists'][artist][0]} 取消訂閱 `{artist}`")
         if not await action_check(self, msg, ctx.author):
@@ -206,18 +217,19 @@ class SUBSCRIBE(Cog_Ext):
           subscriber = Subscriber(data['artists'][artist][0], data["subscribers"])
           subscriber.del_artist(artist, data)
           del data["artists"][artist]
-          await change_data(self, ctx, data, f"{subscriber.name} 取消訂閱 `{artist}`(by {ctx.author.mention})")
+          message = f"訂閱紀錄：{subscriber.name} 取消訂閱 `{artist}`(by {ctx.author.mention})"
+          await ctx.send(message)
+          await change_data(self, ctx, data, message)
         await msg.delete()
       else:
         await ctx.send(f"無人訂閱 {artist}", delete_after = 5)
 
-  @commands.command(aliases = ["resub"])
+  @commands.command(aliases = ["resub"], usage= "+resub 繪師 新訂閱者", help= "更改繪師的訂閱者")
   async def change_subscriber(self, ctx, artist, subscriber):
     await ctx.message.delete()
-    if auth(ctx):
+    if await auth(ctx):
       subscriber = subscriber.replace("!", "")
       data = get_data()
-      #artist = artist.title()
       if subscriber in data["subscribers"].keys() and artist in data['artists'].keys():
         oldSubscriber = Subscriber(data['artists'][artist][0], data["subscribers"])
         newSubscriber = Subscriber(subscriber, data["subscribers"])
@@ -227,23 +239,24 @@ class SUBSCRIBE(Cog_Ext):
           await ctx.send("更改訂閱者取消", delete_after = 5)
         else:
           artist.change_subscriber(oldSubscriber, newSubscriber, data)
-          await change_data(self, ctx, data, f"{ctx.author.mention} 將 `{artist.name}` 由 {subscriber} 改為 {newSubscriber.name} 訂閱")
+          message = f"訂閱紀錄：{ctx.author.mention} 將 `{artist.name}` 由 {oldSubscriber.name} 改為 {newSubscriber.name} 訂閱"
+          await ctx.send(message)
+          await change_data(self, ctx, data, message)
         await msg.delete()
       else:
         await ctx.send("新訂閱者不在訂閱者名單內或繪師尚未被訂閱", delete_after = 5)
     else:
       await ctx.send("沒有權限或無此ID", delete_after = 5)
   
-  @commands.command()
-  async def update(self, ctx, artist, date = datetime.datetime.now(tz).date().strftime("%m-%d")):
+  @commands.command(usage= "+update 繪師 <日期>", help= "更新繪師的圖包，***日期格式為MM-DD***(Ex.02-01)")
+  async def update(self, ctx, artist, date = get_time().strftime("%m-%d")):
     try: await ctx.message.delete()
     except: pass
     data = get_data()
-    #artist = artist.title()
     if artist in data["artists"].keys():
       subscriber = Subscriber(data['artists'][artist][0], data["subscribers"])
-      if author_auth(ctx, int(subscriber.name[2:-1])) or auth(ctx):
-        date = f"{datetime.datetime.now(tz).year}-{date}"
+      if author_auth(ctx, int(subscriber.name[2:-1])) or await auth(ctx):
+        date = f"{get_time().year}-{date}"
         if await date_valid(ctx, date):
           artist = Artist(artist, data["artists"])
           artist.update(date, 0, data)
@@ -256,7 +269,7 @@ class SUBSCRIBE(Cog_Ext):
     else:
       await ctx.send("無此繪師的訂閱紀錄", delete_after = 5)
 
-  @commands.command()
+  @commands.command(usage= "+noupdate 繪師", help= "繪師本月無更新")
   async def noupdate(self, ctx, artist):
     await ctx.message.delete()
     data = get_data()
@@ -271,7 +284,7 @@ class SUBSCRIBE(Cog_Ext):
     else:
       await ctx.send("無此繪師的訂閱紀錄", delete_after = 5)
   
-  @commands.command(aliases = ["e_url"])
+  @commands.command(aliases = ["e_url"], usage="+e_url 網址項目 網址", help="更改網址\n網址項目：0->預覽網址，1->下載網址\n網址的空格會轉為換行")
   async def edit_subscriber(self, ctx, item:int , *, s):
     await ctx.message.delete()
     s = s.split(" ")
@@ -281,10 +294,13 @@ class SUBSCRIBE(Cog_Ext):
     else:
       subscriber = ctx.author.mention
       url = s
-    url = str(url)[1:-1].replace("'", "")
-    url = url.replace(", ", "\n")
+    if url == ['None']:
+      url = None
+    else:
+      url = str(url)[1:-1].replace("'", "")
+      url = url.replace(", ", "\n")
     subscriber = subscriber.replace("!", "")
-    if author_auth(ctx, int(subscriber[2:-1])) or auth(ctx):
+    if author_auth(ctx, int(subscriber[2:-1])) or await auth(ctx):
       data = get_data()
       if subscriber not in data["subscribers"].keys():
         await ctx.send(f"{subscriber} 不在訂閱者名單內", delete_after = 5)
@@ -297,7 +313,7 @@ class SUBSCRIBE(Cog_Ext):
     else:
       await ctx.send("沒有權限", delete_after = 5)
 
-  @commands.command()
+  @commands.command(usage="+info [繪師|訂閱者]", help="查詢繪師/訂閱者的訂閱資料")
   async def info(self, ctx, target):
     await ctx.message.delete()
     if ctx.channel.id == 681543745824620570 or ctx.channel.id == 719132688392519725:
@@ -324,7 +340,7 @@ class SUBSCRIBE(Cog_Ext):
         artist = Artist(target, data["artists"])
         subscriber = Subscriber(artist.subscriber, data["subscribers"])
         message = f"`{artist.name}`{artist.mark}：\n>>> 訂閱者： {subscriber.name}\n更新狀態："
-        if datetime.date.fromisoformat(artist.lastUpdate).month == datetime.datetime.now(tz).month:
+        if datetime.date.fromisoformat(artist.lastUpdate).month == get_time().month:
           if artist.statu == 0:
             message += "本月已更新\n"
           elif artist.statu == 2:
@@ -341,9 +357,9 @@ class SUBSCRIBE(Cog_Ext):
     else:
       await ctx.send("頻道錯誤", delete_after = 5)
 
-  @commands.command()
+  @commands.command(usage="+check", help="檢查超過一個月無更新的訂閱者")
   async def check(self, ctx):
-    if auth(ctx) and ctx.channel.id == 681543745824620570:
+    if await auth(ctx) and ctx.channel.id == 681543745824620570:
       message = "超過30天（含）未更新：\n>>> "
       data = get_data()
       for subscriber in data["subscribers"].keys():
@@ -352,7 +368,7 @@ class SUBSCRIBE(Cog_Ext):
         for artist in subscriber.artists:
           artist = Artist(artist, data["artists"])
           lastupdate = datetime.date.fromisoformat(artist.lastUpdate)
-          since_lastupdate = datetime.datetime.now(tz).date() - lastupdate
+          since_lastupdate = get_time().date() - lastupdate
           if since_lastupdate >= datetime.timedelta(days = 30):
             if artist.statu != 1:
               notupdate.append([artist.name, lastupdate.strftime("%m-%d")])
@@ -370,6 +386,25 @@ class SUBSCRIBE(Cog_Ext):
       await ctx.send("若已更新但還是在清單中，請確認更新時使用指令`+update 繪師 日期（mm-dd）`或告知管理者更新日期，繪師無更新請使用`+noupdate 繪師`")
     await ctx.message.delete()
 
+  @commands.command(usage="+upload <作者> <訂閱者> or +upload <訂閱者>", help="上傳非常態訂閱的圖包等等")
+  async def upload(self, ctx, author = "", subscriber = ""):
+    if re.match(r"<@!?\d{18}>", author):
+      subscriber = author.replace("!", "")
+      author = ""
+    elif not subscriber:
+      subscriber = ctx.author.mention
+    if await auth(ctx) or author_auth(ctx, subscriber):
+      await ctx.message.delete()
+      data = get_data()
+      if subscriber in data["subscribers"].keys():
+        subscriber = Subscriber(subscriber, data["subscribers"])
+        if not author:
+          await ctx.send(f"{subscriber.name} 上傳了圖包\n>>> 下載網址：\n{subscriber.DLurl()}")
+        else:
+          await ctx.send(f"{subscriber.name} 上傳了 `{author}` 的圖包\n>>> 下載網址：\n{subscriber.DLurl()}")
+      else:
+        await ctx.send("無網址資料", delete_after = 3)
+    
   @commands.Cog.listener()
   async def on_message_delete(self, message):
     setting = readFile("setting")
@@ -380,8 +415,8 @@ class SUBSCRIBE(Cog_Ext):
       setting["info"] = 0
       writeFile("setting", setting)
 
-  @commands.command()
-  async def upload(self, ctx):
+  @commands.command(hidden = True)
+  async def uploadData(self, ctx):
     await ctx.message.delete()
     if await self.bot.is_owner(ctx.author):
       data = readFile("subscribeData")
@@ -393,12 +428,29 @@ class SUBSCRIBE(Cog_Ext):
         await print_overview(self, data)
         await ctx.send("上傳完成", delete_after = 5)
 
-  @commands.command()
+  @commands.command(hidden = True)
   async def pull(self, ctx):
     await ctx.message.delete()
     if await self.bot.is_owner(ctx.author):
       data = get_data()
       writeFile("subscribeData", data)
+
+  @commands.command(hidden = True)
+  async def overview(self, ctx):
+    await ctx.message.delete()
+    if await self.bot.is_owner(ctx.author):
+      setting = readFile("setting")
+      if setting["overview"] != 0:
+        msg = await ctx.fetch_message(setting["overview"])
+        await msg.delete()
+        setting["overview"] = 0
+      data = get_data()
+      await print_overview(self, data)
+
+  @commands.command()
+  async def nowtime(self, ctx):
+    await ctx.send(f"{get_time().date()}\n{get_time().strftime('%m-%d')}", delete_after = 5)
+      
 
 def setup(bot):
   bot.add_cog(SUBSCRIBE(bot))
