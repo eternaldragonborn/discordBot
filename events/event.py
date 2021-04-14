@@ -59,7 +59,7 @@ class Events(Cog_Ext):
     await ctx.send(choice_url("programming"), delete_after = 7)
     await ctx.message.delete()
 
-  @commands.Cog.listener()
+  '''@commands.Cog.listener()
   async def on_message_delete(self, message):
     if message.guild.id == 669934356172636199 and not message.author.bot and not await self.bot.is_owner(message.author):
       await self.bot.get_channel(747054636778913853).send(f"`{(message.created_at + datetime.timedelta(hours = 8)).strftime('%Y-%m-%d %H:%M')}`\t{message.author.mention}：\n{message.content}")
@@ -70,7 +70,12 @@ class Events(Cog_Ext):
       pins = await channel.pins()
       for pin in pins:
         await self.bot.get_channel(747825094046253126).send(pin.content)
-        await pin.delete()
+        await pin.delete()'''
+
+  @commands.Cog.listener()
+  async def on_command(self, ctx):
+    if not await self.bot.is_owner(ctx.author):
+      await self.bot.get_channel(747054636778913853).send(f"`{(ctx.message.created_at + datetime.timedelta(hours = 8)).strftime('%Y-%m-%d %H:%M')}`\t{ctx.author.mention}：{ctx.message.content}")
 
   @commands.Cog.listener()
   async def on_command_error(self, ctx, error):

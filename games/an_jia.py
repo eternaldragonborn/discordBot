@@ -34,8 +34,8 @@ functions = [dice, coin, bzz]
 
 class An_Jia(Cog_Ext):
   
-  @commands.command(aliases = ["aj_s"])
-  async def start_An_Jia(self, ctx, item="", method:int = rand(0,len(functions)), times:int = 1):
+  @commands.command(aliases = ["aj_s"], usage = '+aj_s <安價敘述> <方法> <項目個數>(方法為擲骰時代表骰子面數)', help = '開始安價，+aj_e 可強制結束\n方法：0:擲骰, 1:硬幣, 2:4色籤')
+  async def start_An_Jia(self, ctx, item="", method:int = -1, times:int = 1):
     global started
     global functions
     global result
@@ -43,9 +43,11 @@ class An_Jia(Cog_Ext):
 
     await ctx.message.delete()
     if not started:
+      if method == -1:
+        method = rand(0,len(functions))
       way = [method, times]
       result = functions[method](times)
-      message = (f"{ctx.author.mention}開始了安價，輸入`+aj 指示`參加\n{result}")
+      message = (f"{ctx.author.mention}開始了安價，輸入`+aj 指示(不可省略)`參加\n{result}")
       if item:
         message += f"：{item}"
       await ctx.send(message)
@@ -67,7 +69,9 @@ class An_Jia(Cog_Ext):
       if outcome == result:
         message += arg
         started = False
-      await ctx.send(message)
+        await ctx.send(message, delete_after = 20)
+      else:
+        await ctx.send(message, delete_after = 5)
     else:
       await ctx.send("目前沒有安價在進行", delete_after = 5)
 
@@ -76,6 +80,7 @@ class An_Jia(Cog_Ext):
     global started
     await ctx.message.delete()
     if started:
+      await ctx.send("以強制結束", delete_after = 5)
       started = False
 
 def setup(bot):

@@ -3,6 +3,7 @@ from discord.ext import commands
 from core.classes import Cog_Ext
 from core.wrFiles import readFile
 import random
+import datetime
 
 
 is_started = False
@@ -72,7 +73,13 @@ class BLACKJACK(Cog_Ext):
     global players
     global Round
     global turn
+    global start_time
 
+    end_time = datetime.datetime.now()
+    def check(msg :discord.Message) -> bool:
+        return msg.author.id == 719120395571298336
+    #await channel.purge(check=check, before=end_time, after=start_time)
+    await channel.purge(check=check, limit = 300)
     if len(participants.keys()) == 0:
       await channel.send("所有玩家皆爆牌，此局遊戲無贏家")
     else:
@@ -102,10 +109,10 @@ class BLACKJACK(Cog_Ext):
           else:
             msg += f"`{card[0]}` `{card[1]}`\n"
       msg += "** **"
-      await channel.send(msg)
+      await channel.send(msg, delete_after = 30)
 
     if Round > t_round:
-      await channel.send("遊戲結束")
+      await channel.send("遊戲結束", delete_after = 30)
       in_game = False
       is_started = False
       participants = {}
@@ -129,6 +136,7 @@ class BLACKJACK(Cog_Ext):
     global turn
     global Round
     global message
+    global start_time
 
     await message.delete()
     if not in_game and is_started:
@@ -138,6 +146,7 @@ class BLACKJACK(Cog_Ext):
         participants = {}
       else:
         await channel.send("遊戲開始，由於bot一定時間內只能發5則訊息，若訊息卡住請稍待數秒")
+        start_time = datetime.datetime.now()
         in_game = True
     if is_started and in_game:
       if turn == 0:  #回合開始
@@ -161,7 +170,7 @@ class BLACKJACK(Cog_Ext):
       await message.add_reaction("\N{BLACK QUESTION MARK ORNAMENT}")
 
   @commands.command(aliases = ["BJ"])
-  async def blackjack(self, ctx, n :int =2, r :int =1):
+  async def blackjack(self, ctx, n :int =10, r :int =1):
     global is_started
     global in_game
     global initiator
@@ -199,7 +208,6 @@ class BLACKJACK(Cog_Ext):
         except:
           pass
         else:
-          #await msg.delete()
           await BLACKJACK.game(self)    ###
 
   @commands.Cog.listener()
@@ -284,8 +292,8 @@ class BLACKJACK(Cog_Ext):
             else:
               msg += (f" `{p}` 點")
           await user.send(msg)
-        else:
-          await channel.send(f"{user.mention} 你不在遊戲中或現在不是你的回合", delete_after = 5)
+        #else:
+          #await channel.send(f"{user.mention} 你不在遊戲中或現在不是你的回合", delete_after = 5)
 
   @commands.command()
   async def BJ_e(self, ctx):

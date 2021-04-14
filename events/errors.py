@@ -13,19 +13,10 @@ class Errors(Cog_Ext):
   async def default_error(self, ctx, error):
     if isinstance(error, commands.MissingRequiredArgument):
       await ctx.send("缺少必要參數，請確認指令使用方法", delete_after = 5)
+    elif isinstance(error, commands.BadArgument):
+      await ctx.send("參數類別轉換錯誤，請確認是否輸入正確", delete_after = 5)
     else:
       await ctx.send("發生例外錯誤", delete_after = 5)
-
-  '''@commands.Cog.listener()
-  async def on_command_error(self, ctx, error):
-    if isinstance(error, commands.CommandNotFound):
-      pass
-    elif ctx.command.has_error_handler():
-      pass
-    elif isinstance(error, commands.MissingRequiredArgument):
-      await ctx.send("缺少必要參數，請確認指令使用方法", delete_after = 5)
-    else:
-      await ctx.send("發生例外錯誤", delete_after = 5)'''
 
 def setup(bot):
   bot.add_cog(Errors(bot))

@@ -69,7 +69,7 @@ class BASIC(Cog_Ext):
       cmd = self.bot.get_command(command)
       if cmd == None: await ctx.send("查無此指令，請確認是否輸入正確", delete_after = 5)
       elif not cmd.help: await ctx.send("此指令尚未編寫help，有問題請洽宇", delete_after = 5)
-      else: await ctx.send(f'指令中參數若有"<>"代表非必要，輸入時"<>"不需輸入\n```{cmd.usage}\n{cmd.help}```', delete_after = 15)
+      else: await ctx.send(f'指令中參數若有"<>"代表非必要，輸入時"<>"不需輸入\n```用法：{cmd.usage}\n說明:{cmd.help}```', delete_after = 15)
 
   @commands.command(hidden = True)
   async def guild_id(self, ctx):

@@ -9,10 +9,11 @@ def t(mention):
 
 class CLEAN(Cog_Ext):
   @commands.command(usage = "+clean <最大數量>", help = "清理bot的訊息")
-  async def clean(self, ctx, limit :int =999, target :int =719120395571298336):
+  async def clean(self, ctx, limit :int =999, target ="<@719120395571298336>"):
+    target = int(target.replace("!", "")[2:-1])
     def judge(msg :discord.Message) -> bool:
       return msg.author.id == target
-    if await self.bot.is_owner(ctx.author) or target == self.bot.id:
+    if target == 719120395571298336 or ctx.author.id in [546614210243854337, 384233645621248011, 590430031281651722]:
       await ctx.message.delete()
       count = len(await ctx.channel.purge(check = judge, limit = limit))
       await ctx.send(f"清除了 {(count)} 條訊息", delete_after = 5)

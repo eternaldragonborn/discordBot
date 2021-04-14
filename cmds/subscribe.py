@@ -91,7 +91,8 @@ class Subscriber():
     self.name = subscriber
     self.__url = data[subscriber][0:2]
     self.artists = data[subscriber][2]
-  def update_data(self, data):  data["subscribers"].update({self.name : [self.__url[0], self.__url[1], self.artists]})
+  def update_data(self, data):  
+    data["subscribers"].update({self.name : [self.__url[0], self.__url[1], self.artists]})
   def edit_url(self, target, url, data):  
     self.__url[target] = url
     self.update_data(data)
@@ -114,7 +115,8 @@ class Artist():
     self.lastUpdate = data[artist][1]
     self.mark = data[artist][2]
     self.statu = data[artist][3]    #0:普通，1:訂閱後未更新，2:本月無更新
-  def update_data(self, data):  data["artists"].update({self.name : [self.subscriber, self.lastUpdate, self.mark, self.statu]})
+  def update_data(self, data):  
+    data["artists"].update({self.name : [self.subscriber, self.lastUpdate, self.mark, self.statu]})
   def change_subscriber(self, oldSubscriber, newSubscriber, data):  
     self.subscriber = newSubscriber.name
     self.update_data(data)
@@ -249,25 +251,29 @@ class SUBSCRIBE(Cog_Ext):
       await ctx.send("沒有權限或無此ID", delete_after = 5)
   
   @commands.command(usage= "+update 繪師 <日期>", help= "更新繪師的圖包，***日期格式為MM-DD***(Ex.02-01)")
-  async def update(self, ctx, artist, date = get_time().strftime("%m-%d")):
+  async def update(self, ctx, artists, timestamp = None):
     try: await ctx.message.delete()
     except: pass
     data = get_data()
-    if artist in data["artists"].keys():
-      subscriber = Subscriber(data['artists'][artist][0], data["subscribers"])
-      if author_auth(ctx, int(subscriber.name[2:-1])) or await auth(ctx):
-        date = f"{get_time().year}-{date}"
-        if await date_valid(ctx, date):
-          artist = Artist(artist, data["artists"])
-          artist.update(date, 0, data)
-          if await change_data(self, ctx, data, f"{subscriber.name} 於 {date} 更新了 `{artist.name}`"):
-            await ctx.send(f"{subscriber.name} 於 `{date}` 更新了 `{artist.name}`\n>>> {subscriber.print_url()}")
-          if ctx.author.id != int(subscriber.name[2:-1]):
-            await ctx.send(f"{subscriber.name} 請盡量自己打更新指令喔(^.<)", delete_after = 30)
-      else:
-        await ctx.send(f"你不是 `{artist}` 的訂閱者或頻道錯誤", delete_after = 5)
+    artists = artists.split(",")
+    if timestamp == None:
+      timestamp = str(get_time().date())
     else:
-      await ctx.send("無此繪師的訂閱紀錄", delete_after = 5)
+      timestamp = f"{get_time().year}-{timestamp}"
+    if await date_valid(ctx, timestamp):
+      for artist in artists:
+        if artist in data["artists"].keys():
+          subscriber = Subscriber(data['artists'][artist][0], data["subscribers"])
+          if author_auth(ctx, int(subscriber.name[2:-1])) or await auth(ctx):
+            artist = Artist(artist, data["artists"])
+            artist.update(timestamp, 0, data)
+            if await change_data(self, ctx, data, f"{subscriber.name} 於 {timestamp} 更新了 `{artist.name}`"):
+              await ctx.send(f"{subscriber.name} 於 `{timestamp}` 更新了 `{artist.name}`\n>>> {subscriber.print_url()}")
+          else:
+            await ctx.send(f"你不是 `{artist}` 的訂閱者或頻道錯誤", delete_after = 5)
+            break
+        else:
+          await ctx.send(f"無`{artist}`的訂閱紀錄", delete_after = 5)
 
   @commands.command(usage= "+noupdate 繪師", help= "繪師本月無更新")
   async def noupdate(self, ctx, artist):
@@ -449,7 +455,8 @@ class SUBSCRIBE(Cog_Ext):
 
   @commands.command()
   async def nowtime(self, ctx):
-    await ctx.send(f"{get_time().date()}\n{get_time().strftime('%m-%d')}", delete_after = 5)
+    await ctx.message.delete()
+    await ctx.send(f"{get_time()}\n{ctx.message.created_at}", delete_after = 5)
       
 
 def setup(bot):
