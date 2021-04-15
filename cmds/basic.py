@@ -9,7 +9,7 @@ botId = readFile("setting")["botId"]
 guildID = [719132687897591808]
 
 class BASIC(Cog_Ext):
-  @cog_ext.cog_subcommand(base='extension', guild_ids=guildID)
+  @cog_ext.cog_subcommand(base='extension')
   async def load(self, ctx, folder, extension):
       if await self.bot.is_owner(ctx.author):
           try:
@@ -23,7 +23,7 @@ class BASIC(Cog_Ext):
       else:
           await ctx.send("請不要冒充作者", delete_after= 3)
 
-  @cog_ext.cog_subcommand(base='extension', guild_ids=guildID)
+  @cog_ext.cog_subcommand(base='extension')
   async def unload(self, ctx, folder, extension):
       if await self.bot.is_owner(ctx.author):
           try:
@@ -37,7 +37,7 @@ class BASIC(Cog_Ext):
       else:
           await ctx.send("請不要冒充作者", delete_after= 3)
 
-  @cog_ext.cog_subcommand(base='extension', guild_ids=guildID)
+  @cog_ext.cog_subcommand(base='extension')
   async def reload(self, ctx, folder, extension):
       if await self.bot.is_owner(ctx.author):
           try:
