@@ -5,6 +5,7 @@ from core.keep_alive import keep_alive
 import os
 from replit import db
 import logging
+from discord_slash import SlashCommand
 
 logger = logging.getLogger('discord')
 logger.setLevel(logging.WARNING)
@@ -15,6 +16,7 @@ logger.addHandler(error_log)
 
 bot = commands.Bot(command_prefix='+', owner_id = 384233645621248011)
 bot.remove_command("help")
+slash = SlashCommand(bot, override_type=True, sync_commands=True, sync_on_cog_reload=True)
 
 '''with open("setting.json", "r", encoding= "utf8") as jsettings:
     setting = json.load(jsettings)'''

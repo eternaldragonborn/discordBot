@@ -2,13 +2,14 @@ import discord
 from discord.ext import commands
 from core.classes import Cog_Ext
 from core.wrFiles import readFile
-import datetime
+from discord_slash import cog_ext
 
 authorId = readFile("setting")["authorId"]
 botId = readFile("setting")["botId"]
+guildID = [719132687897591808]
 
 class BASIC(Cog_Ext):
-  @commands.command(hidden = True)
+  @cog_ext.cog_subcommand(base='extension', guild_ids=guildID)
   async def load(self, ctx, folder, extension):
       if await self.bot.is_owner(ctx.author):
           try:
@@ -21,9 +22,8 @@ class BASIC(Cog_Ext):
               await ctx.send(f"> **{extension}** has been loaded.", delete_after = 3)
       else:
           await ctx.send("請不要冒充作者", delete_after= 3)
-      await ctx.message.delete()
 
-  @commands.command(hidden = True)
+  @cog_ext.cog_subcommand(base='extension', guild_ids=guildID)
   async def unload(self, ctx, folder, extension):
       if await self.bot.is_owner(ctx.author):
           try:
@@ -36,9 +36,8 @@ class BASIC(Cog_Ext):
               await ctx.send(f"> **{extension}** has been unloaded.", delete_after = 3)
       else:
           await ctx.send("請不要冒充作者", delete_after= 3)
-      await ctx.message.delete()
 
-  @commands.command(hidden = True)
+  @cog_ext.cog_subcommand(base='extension', guild_ids=guildID)
   async def reload(self, ctx, folder, extension):
       if await self.bot.is_owner(ctx.author):
           try:
@@ -51,7 +50,6 @@ class BASIC(Cog_Ext):
               await ctx.send(f"> **{extension}** has been reloaded.", delete_after = 3)
       else:
           await ctx.send("請不要冒充作者", delete_after= 3)
-      await ctx.message.delete()
 			
   @commands.command()
   async def help(self, ctx, command = ""):
@@ -70,11 +68,6 @@ class BASIC(Cog_Ext):
       if cmd == None: await ctx.send("查無此指令，請確認是否輸入正確", delete_after = 5)
       elif not cmd.help: await ctx.send("此指令尚未編寫help，有問題請洽宇", delete_after = 5)
       else: await ctx.send(f'指令中參數若有"<>"代表非必要，輸入時"<>"不需輸入\n```用法：{cmd.usage}\n說明:{cmd.help}```', delete_after = 15)
-
-  @commands.command(hidden = True)
-  async def guild_id(self, ctx):
-    if(await self.bot.is_owner(ctx.author)):
-      await ctx.send(ctx.guild.id, delete_after = 5)
   
 def setup(bot):
   bot.add_cog(BASIC(bot))
