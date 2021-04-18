@@ -1,8 +1,10 @@
 import requests
 from core.wrFiles import writeFile
+from replit import db
+
 
 api = 'https://discord.com/api/v8/'
-headers = {"Authorization": "Bot NzE5MTIwMzk1NTcxMjk4MzM2.XtyzDg.l8Kezg64pv8kOSZtdU6BHDOQ9Oc"}
+headers = {"Authorization": f"Bot {db['token']}"}
 
 myID = 384233645621248011
 applicationID = 719120395571298336
