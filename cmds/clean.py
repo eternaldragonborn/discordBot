@@ -2,11 +2,6 @@ import discord
 from discord.ext import commands
 from core.classes import Cog_Ext
 
-def t(mention):
-  if "!" in mention:
-    mention = mention.replace("!", "")
-  print(mention)
-
 class CLEAN(Cog_Ext):
   @commands.command(usage = "+clean <最大數量>", help = "清理bot的訊息")
   async def clean(self, ctx, limit :int =999, target ="<@719120395571298336>"):
@@ -38,8 +33,6 @@ class CLEAN(Cog_Ext):
           return not message.pinned
         count = len(await ctx.channel.purge(check = check, limit = None))
         await ctx.send(f"清除了 {(count)} 條訊息", delete_after = 5)
-      #reaction, user = await self.bot.wait_for("reaction_add", timeout = 5, check = check)
-      #print(reaction)
     else:
       await ctx.message.delete()
       await ctx.send("You don't have permission or you are not in the target channel.", delete_after = 3)
