@@ -124,7 +124,7 @@ class BLACKJACK(Cog_Ext):
       players.remove(initiator)
       for player in players:
         participants.setdefault(player , [])
-      await self.game(self)
+      await self.game()
 
   async def game(self):
     global in_game
@@ -208,7 +208,7 @@ class BLACKJACK(Cog_Ext):
         except:
           pass
         else:
-          await self.game(self)    ###
+          await self.game()
 
   @commands.Cog.listener()
   async def on_reaction_add(self, reaction, user):
@@ -229,13 +229,13 @@ class BLACKJACK(Cog_Ext):
             players.append(user)
             await channel.send(f"{user.mention}參加成功", delete_after = 3)
             if len(participants.keys()) == player_num:
-              await self.game(self)
+              await self.game()
           else:
             await channel.send(f"{user.mention}你已在遊戲中", delete_after = 3)
         elif str(reaction.emoji) == "\N{NEGATIVE SQUARED CROSS MARK}":
           if user == initiator:
             participants = {}
-            await self.game(self)
+            await self.game()
           elif user in participants.keys():
             del participants[user]
             players.remove(user)
@@ -263,25 +263,25 @@ class BLACKJACK(Cog_Ext):
 
             if user == initiator:  #莊家爆牌
               Round += 1
-              await self.end_game(self)
+              await self.end_game()
             else:    #閒家爆牌
               turn += 1
-              await self.game(self)
+              await self.game()
           elif point == [21]:   #21點
             await channel.send(f"{user.mention} 21點")
             if user == initiator:  #莊家
               Round += 1
-              await self.end_game(self)
+              await self.end_game()
             else:   #閒家
               turn += 1
-              await self.game(self)
+              await self.game()
         elif str(reaction.emoji)  == "\N{End with Leftwards Arrow Above}" and user == players[turn]:    #next
           if user == initiator:   #莊家
             Round += 1
-            await self.end_game(self)
+            await self.end_game()
           else:   #閒家
             turn +=1
-            await self.game(self)
+            await self.game()
 
         elif str(reaction.emoji)  == "\N{BLACK QUESTION MARK ORNAMENT}" and user in participants.keys():     #查點數
           point = point_check(user)

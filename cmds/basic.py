@@ -1,55 +1,57 @@
-import discord
+import discord, requests
 from discord.ext import commands
 from core.classes import Cog_Ext
 from core.wrFiles import readFile
 from discord_slash import cog_ext
+from discord_slash.utils.manage_commands import create_option, create_choice
 
 authorId = readFile("setting")["authorId"]
 botId = readFile("setting")["botId"]
 guildID = [719132687897591808]
 
 class BASIC(Cog_Ext):
-  @cog_ext.cog_subcommand(base='extension')
+  @cog_ext.cog_subcommand(base='extension', options=[
+                          create_option('folder', '分類資料夾', 3, True, choices=[
+                            create_choice('cmds', 'cmds'), create_choice('events', 'events'),
+                            create_choice('games', 'games')]),
+                          create_option('extension', 'extension', 3 , True)
+                          ])
   async def load(self, ctx, folder, extension):
-      if await self.bot.is_owner(ctx.author):
-          try:
-              self.bot.load_extension(f"{folder}.{extension}")
-          except Exception as e:
-              await ctx.send(f"Something went wrong, exception:***{e}***", delete_after = 3)
-              print(e)
-              print()
-          else:
-              await ctx.send(f"> **{extension}** has been loaded.", delete_after = 3)
+    if await self.bot.is_owner(ctx.author):
+      try:
+        self.bot.load_extension(f"{folder}.{extension}")
+      except commands.ExtensionAlreadyLoaded:
+        try:
+          self.bot.reload_extension(f"{folder}.{extension}")
+        except Exception as e:
+          raise e
+        else:
+          await ctx.send(f"> **{extension}** has been reloaded.", delete_after = 3)
+      except Exception as e:
+        raise e
       else:
-          await ctx.send("請不要冒充作者", delete_after= 3)
+        await ctx.send(f"> **{extension}** has been loaded.", delete_after = 3)
+    else:
+        await ctx.send("請不要冒充作者", delete_after= 3)
 
-  @cog_ext.cog_subcommand(base='extension')
+  @cog_ext.cog_subcommand(base='extension', options=[
+                          create_option('folder', '分類資料夾', 3, True, choices=[
+                            create_choice('cmds', 'cmds'), create_choice('events', 'events'),
+                            create_choice('games', 'games')]),
+                          create_option('extension', 'extension', 3 , True)
+                          ])
   async def unload(self, ctx, folder, extension):
-      if await self.bot.is_owner(ctx.author):
-          try:
-              self.bot.unload_extension(f"{folder}.{extension}")
-          except Exception as e:
-              await ctx.send(f"Something went wrong, exception:***{e}***", delete_after = 3)
-              print(e)
-              print()
-          else:
-              await ctx.send(f"> **{extension}** has been unloaded.", delete_after = 3)
+    if await self.bot.is_owner(ctx.author):
+      try:
+        self.bot.unload_extension(f"{folder}.{extension}")
+      except Exception as e:
+        await ctx.send(f"Something went wrong, exception:***{e}***", hiddne=True)
+        print(e)
+        print()
       else:
-          await ctx.send("請不要冒充作者", delete_after= 3)
-
-  @cog_ext.cog_subcommand(base='extension')
-  async def reload(self, ctx, folder, extension):
-      if await self.bot.is_owner(ctx.author):
-          try:
-              self.bot.reload_extension(f"{folder}.{extension}")
-          except Exception as e:
-              print(e)
-              print()
-              await ctx.send(f"Something went wrong, exception:***{e}***", delete_after = 7)
-          else:
-              await ctx.send(f"> **{extension}** has been reloaded.", delete_after = 3)
-      else:
-          await ctx.send("請不要冒充作者", delete_after= 3)
+        await ctx.send(f"> **{extension}** has been unloaded.", delete_after = 3)
+    else:
+      await ctx.send("請不要冒充作者", delete_after= 3)
 			
   @commands.command()
   async def help(self, ctx, command = ""):
@@ -68,6 +70,7 @@ class BASIC(Cog_Ext):
       if cmd == None: await ctx.send("查無此指令，請確認是否輸入正確", delete_after = 5)
       elif not cmd.help: await ctx.send("此指令尚未編寫help，有問題請洽宇", delete_after = 5)
       else: await ctx.send(f'指令中參數若有"<>"代表非必要，輸入時"<>"不需輸入\n```用法：{cmd.usage}\n說明:{cmd.help}```', delete_after = 15)
+      
   
 def setup(bot):
   bot.add_cog(BASIC(bot))

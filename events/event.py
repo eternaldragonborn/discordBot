@@ -37,17 +37,14 @@ class Events(Cog_Ext):
       if self.bot.user in msg.mentions:
         reply = random.choices([f"{msg.author.mention} 吼嗚?", "作者很懶，沒留下任何回覆。"], weights = [7,3])[0]
         await msg.channel.send(reply, delete_after = delete_time)
-      if msg.author == self.bot.get_user(294473515262803969) and (msg.attachments != [] or re.search('^<a?:.+>$', msg.content)):
-        await msg.add_reaction("\N{THUMBS DOWN SIGN}")
-        #await msg.delete()
       if "並沒有" in msg.content or "不要瞎掰" in msg.content:
         await msg.channel.send(choice_url("not"), delete_after = delete_time)
       if re.search(r"[^不]*好耶",msg.content):
         await msg.channel.send(choice_url("yeah"),delete_after = delete_time)
       if re.match(r"派[耶欸ㄟ]",msg.content):
         await msg.channel.send(choice_url("pie"), delete_after = delete_time)
-      if "猴子" in msg.content:
-        await msg.channel.send(choice_url("monkey"), delete_after = delete_time)
+      if re.search(r'[打揍殺]\s*[龍竜(多拉貢)]', msg.content) and not await self.bot.is_owner(msg.author):
+        await msg.reply('<:092:819621685010366475>'*3)
 
   @commands.command()
   async def loading(self, ctx, delay_time: int = 5):
@@ -58,24 +55,6 @@ class Events(Cog_Ext):
   async def programming(self, ctx):
     await ctx.send(choice_url("programming"), delete_after = 7)
     await ctx.message.delete()
-
-  '''@commands.Cog.listener()
-  async def on_message_delete(self, message):
-    if message.guild.id == 669934356172636199 and not message.author.bot and not await self.bot.is_owner(message.author):
-      await self.bot.get_channel(747054636778913853).send(f"`{(message.created_at + datetime.timedelta(hours = 8)).strftime('%Y-%m-%d %H:%M')}`\t{message.author.mention}：\n{message.content}")
-
-  @commands.Cog.listener()
-  async def on_guild_channel_pins_update(self, channel, last_pin):
-    if channel.id == 747054636778913853:
-      pins = await channel.pins()
-      for pin in pins:
-        await self.bot.get_channel(747825094046253126).send(pin.content)
-        await pin.delete()'''
-
-  @commands.Cog.listener()
-  async def on_command(self, ctx):
-    if not await self.bot.is_owner(ctx.author):
-      await self.bot.get_channel(747054636778913853).send(f"`{(ctx.message.created_at + datetime.timedelta(hours = 8)).strftime('%Y-%m-%d %H:%M')}`\t{ctx.author.mention}：{ctx.message.content}")
 
   @commands.Cog.listener()
   async def on_command_error(self, ctx, error):

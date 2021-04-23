@@ -306,7 +306,7 @@ class SUBSCRIBE(Cog_Ext):
     for artist in artists:
       if artist in data["artists"].keys():
         artist = Artist(artist, data["artists"])
-        if author_auth(ctx, int(artist.subscriber[2:-1])) or auth(ctx):
+        if author_auth(ctx, int(artist.subscriber[2:-1])) or await auth(ctx):
           artist.update(get_time().strftime("%Y-%m-%d"), 2, data)
           if await change_data(self, ctx, data, f"{artist.subscriber}：`{artist.name}`本月沒有更新"):
             await ctx.send(f"> `{artist.name}` 本月沒有更新")
@@ -394,12 +394,12 @@ class SUBSCRIBE(Cog_Ext):
 
   @cog_ext.cog_subcommand(base='subscribe', subcommand_group='info', name='artist', description='查詢繪師資料', guild_ids=guildID)
   async def info_artist(self, ctx, artist):
-    await self.info(self, ctx, artist, 1)
+    await self.info(ctx, artist, 1)
 
   @cog_ext.cog_subcommand(base='subscribe', subcommand_group='info', name='subscriber', description='查詢訂閱者資料', guild_ids=guildID)
   async def info_subscriber(self, ctx, subscriber:discord.Member):
     subscriber = subscriber.mention.replace('!', '')
-    await self.info(self, ctx, subscriber, 0)
+    await self.info(ctx, subscriber, 0)
 
   @cog_ext.cog_subcommand(base='manage', description='檢查超過30天未更新的訂閱者，管理員用', guild_ids=guildID)
   async def check(self, ctx):

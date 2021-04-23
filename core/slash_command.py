@@ -1,35 +1,38 @@
 import requests
 from core.wrFiles import writeFile
-from replit import db
+import os
 
 
 api = 'https://discord.com/api/v8/'
-headers = {"Authorization": f"Bot {db['token']}"}
+headers = {"Authorization": f"Bot {os.environ['bot_token']}"}
 
 myID = 384233645621248011
 applicationID = 719120395571298336
 
-def edit_permission(ids:str, idType:int, permission:bool, guildID:int=None, commandID:int=None):
-   url = f'/applications/{applicationID}/guilds/{guildID}/commands/{commandID}/permissions'
+def edit_permission(ids:str, idType:int, permission:bool, guildID, commandID, oldPermission):
+  url = f'/applications/{applicationID}/guilds/{guildID}/commands/{commandID}/permissions'
+  
+  ids = ids.split(',')
    
-   ids = ids.split(',')
-   permissions = []
-   for id in ids:
+  permissions = []
+  for id in ids:
       permissions.append({
-             'id':int(id),  #role or user id
-             'type':idType,   #1:role, 2:user
-             'permission':permission   #T/F
+            'id':int(id),  #role or user id
+            'type':idType,   #1:role, 2:user
+            'permission':permission   #T/F
           })
+  if oldPermission:
+    permissions.extend(oldPermission['permissions'])
    
-   json = {
-      'permissions' : permissions
-   }
+  json = {
+    'permissions' : permissions
+  }
    
-   r = requests.put(f'{api}{url}', headers = headers, json=json)
-   if r.status_code != requests.codes.ok:
-      return r.reason
-   else:
-      return '更改成功'
+  r = requests.put(f'{api}{url}', headers = headers, json=json)
+  if r.status_code != requests.codes.ok:
+    return r.reason
+  else:
+    return '更改成功'
    
 def get_commands(guildID:int=None):  #only show id, name, default_permission
    if guildID:
@@ -68,9 +71,4 @@ def get_command_permissions(guildID:int, commandID:int=None):
   else:
     url = f'/applications/{applicationID}/guilds/{guildID}/commands/permissions'
   r = requests.get(f'{api}{url}', headers=headers)
-  if not r.ok:
-    return r.reason
-  else:
-    filename = 'slash_command_permissions'
-    writeFile(filename, r.json())
-    return f'已寫入至`{filename}.json`檔案內'
+  return r

@@ -4,6 +4,7 @@ from core.classes import Cog_Ext
 from discord_slash.utils.manage_commands import create_option, create_choice
 from discord_slash import cog_ext, error
 from core import slash_command
+from core.wrFiles import writeFile
 
 guildID = [719132687897591808]
 
@@ -35,7 +36,11 @@ class slashCommands(Cog_Ext):
                           ])
   async def get_command_permission(self, ctx, guildid, commandid=None):
     r = slash_command.get_command_permissions(guildid, commandid)
-    await ctx.send(r, hidden=True)
+    if not r.ok:
+      await ctx.send(r.reason, hidden=True)
+    else:
+      writeFile('slash_command_permissions', r.json())
+      await ctx.send('以寫入至`slash_command_permission.json`檔案中', hidden=True)
 
   @cog_ext.cog_subcommand(base='command', subcommand_group='permission', name='edit', description='修改斜線指令權限',
                           options=[
@@ -44,11 +49,26 @@ class slashCommands(Cog_Ext):
                                           choices=[create_choice(1, '身分組'), create_choice(2, '使用者')]),
                             create_option(name='permission', description='權限', option_type=3, required=True,
                                           choices=[create_choice('True', '是'), create_choice('False', '否')]),
-                            create_option(name='guildid', description='伺服器ID', option_type=3, required=False),
-                            create_option(name='commandid', description='指令ID', option_type=3, required=False)
+                            create_option(name='guildid', description='伺服器ID', option_type=3, required=True),
+                            create_option(name='commandid', description='指令ID', option_type=3, required=True)
                           ])
-  async def edit_command_permission(self, ctx, ids, idtype:int, permission:bool, guildid=None, commandid=None):
+  async def edit_command_permission(self, ctx, ids, idtype:int, permission, guildid, commandid):
     r = slash_command.edit_permission(ids, idtype, permission, guildid, commandid)
+    await ctx.send(r, hidden=True)
+
+  @cog_ext.cog_subcommand(base='command', subcommand_group='permission', name='append', description='擴充斜線指令權限',
+                          options=[
+                            create_option(name='ids', description='使用者/身分組ID', option_type=3, required=True),
+                            create_option(name='idtype', description='ID種類', option_type=4, required=True,
+                                          choices=[create_choice(1, '身分組'), create_choice(2, '使用者')]),
+                            create_option(name='permission', description='權限', option_type=3, required=True,
+                                          choices=[create_choice('True', '是'), create_choice('False', '否')]),
+                            create_option(name='guildid', description='伺服器ID', option_type=3, required=True),
+                            create_option(name='commandid', description='指令ID', option_type=3, required=True)
+                          ])
+  async def append_command_permission(self, ctx, ids, idtype:int, permission, guildid, commandid):
+    permissions = dict(slash_command.get_command_permissions(guildid, commandid).json())
+    r = slash_command.edit_permission(ids, idtype, permission, guildid, commandid, permissions)
     await ctx.send(r, hidden=True)
 
   @commands.Cog.listener()
@@ -61,7 +81,7 @@ class slashCommands(Cog_Ext):
       await ctx.send("輸入的參數類型錯誤", hidden=True)
     else:
       await ctx.send(f"發生例外錯誤 {ex}，已進行紀錄", hidden=True)
-    await self.bot.get_channel(812628283631206431).send(f"指令：/{ctx.name}(id:{ctx.command_id}, by:{ctx.author.mention})\n錯誤：{error}")
+    await self.bot.get_channel(812628283631206431).send(f"指令：/{ctx.name}(id:{ctx.command_id}, by:{ctx.author.mention})\n錯誤：{ex}")
 
   @commands.Cog.listener()
   async def on_slash_command(self, ctx):
