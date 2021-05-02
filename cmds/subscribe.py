@@ -17,7 +17,6 @@ async def auth(ctx):
     and ctx.author.id in [590430031281651722, 384233645621248011, 546614210243854337]:
     return True
   else:
-    await ctx.send("沒有權限或頻道錯誤，有疑問請詢問管理員", hidden=True)
     return False
 
 def author_auth(ctx, target):
@@ -335,7 +334,7 @@ class SUBSCRIBE(Cog_Ext):
     else:
       url = url.split(' ')
       url = '\n'.join(url)
-    if author_auth(ctx, subscriber) or await auth(ctx):
+    if author_auth(ctx, int(subscriber[2:-1])) or await auth(ctx):
       data = get_data()
       if subscriber not in data["subscribers"].keys():
         await ctx.send(f"{subscriber} 不在訂閱者名單內", delete_after = 5)
@@ -431,24 +430,26 @@ class SUBSCRIBE(Cog_Ext):
 
   @cog_ext.cog_subcommand(base='subscribe', description='上傳非常態訂閱的圖包', guild_ids=guildID,
                     options=[
-                      create_option(name='author', description='圖包作者', option_type=3, required=False),
+                      create_option(name='artist', description='圖包作者', option_type=3, required=False),
                       create_option(name='subscriber', description='上傳的訂閱者，限管理員使用', option_type=6, required=False)
                     ])
-  async def upload(self, ctx, author = "", subscriber = ""):
+  async def upload(self, ctx, artist = "", subscriber = ""):
     if subscriber != "":
       subscriber = subscriber.mention.replace("!", "")
     else:
-      subscriber = ctx.author.mention.replace('!', '')
-    if await auth(ctx) or author_auth(ctx, subscriber):
+      subscriber = ctx.artist.mention.replace('!', '')
+    if await auth(ctx) or author_auth(ctx, int(subscriber[2:-1])):
       data = get_data()
       if subscriber in data["subscribers"].keys():
         subscriber = Subscriber(subscriber, data["subscribers"])
-        if not author:
+        if not artist:
           await ctx.send(f"{subscriber.name} 上傳了圖包\n>>> 下載網址：\n{subscriber.DLurl()}")
         else:
-          await ctx.send(f"{subscriber.name} 上傳了 `{author}` 的圖包\n>>> 下載網址：\n{subscriber.DLurl()}")
+          await ctx.send(f"{subscriber.name} 上傳了 `{artist}` 的圖包\n>>> 下載網址：\n{subscriber.DLurl()}")
       else:
         await ctx.send("無網址資料", delete_after = 3)
+    else:
+      await ctx.send("頻道錯誤或沒有權限，有疑問請詢問宇", hidden=True)
     
   @commands.Cog.listener()
   async def on_message_delete(self, message):

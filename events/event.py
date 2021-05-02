@@ -1,10 +1,7 @@
 from core.classes import Cog_Ext
-import discord
 from discord.ext import commands
-import random
+import random, re, discord
 from core.wrFiles import readFile
-import re
-import datetime
 from events.errors import Errors
 
 authorId = readFile("setting")["authorId"]
@@ -43,7 +40,7 @@ class Events(Cog_Ext):
         await msg.channel.send(choice_url("yeah"),delete_after = delete_time)
       if re.match(r"派[耶欸ㄟ]",msg.content):
         await msg.channel.send(choice_url("pie"), delete_after = delete_time)
-      if re.search(r'[打揍殺]\s*[龍竜(多拉貢)]', msg.content) and not await self.bot.is_owner(msg.author):
+      if re.search(r'[打揍殺屠砍幹][\s\n\W]*[龍竜(多拉貢)]', msg.content) and not await self.bot.is_owner(msg.author):
         await msg.reply('<:092:819621685010366475>'*3)
 
   @commands.command()
@@ -61,7 +58,10 @@ class Events(Cog_Ext):
     if isinstance(error, commands.CommandNotFound):
       pass
     else:
-      await ctx.message.delete()
+      try:
+        await ctx.message.delete()
+      except:
+        pass
       error_command = f"{ctx.command}_error"
       if hasattr(Errors, error_command):
         error_cmd = getattr(Errors, error_command)
