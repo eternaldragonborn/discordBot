@@ -437,7 +437,7 @@ class SUBSCRIBE(Cog_Ext):
     if subscriber != "":
       subscriber = subscriber.mention.replace("!", "")
     else:
-      subscriber = ctx.artist.mention.replace('!', '')
+      subscriber = ctx.author.mention.replace('!', '')
     if await auth(ctx) or author_auth(ctx, int(subscriber[2:-1])):
       data = get_data()
       if subscriber in data["subscribers"].keys():
