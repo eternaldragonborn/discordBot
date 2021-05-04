@@ -1,11 +1,8 @@
-#import json
-import discord
+#!/opt/virtualenvs/python3/bin/python
+import discord, os, logging
 from discord.ext import commands
 from core.keep_alive import keep_alive
-import os
-import logging
 from discord_slash import SlashCommand
-from core.wrFiles import writeFile
 
 logger = logging.getLogger('discord')
 logger.setLevel(logging.WARNING)
@@ -47,4 +44,4 @@ if __name__ == "__main__":
     try:
       bot.run(token)
     except Exception as e:
-      writeFile("error", e)
+      print(e)

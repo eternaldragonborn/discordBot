@@ -32,12 +32,11 @@ class URLprocessing(Cog_Ext):
 
   async def store_url(self, ctx, urls:list):
     try:  data = json.loads(db[ctx.author.id])
-    except:  pass
-    else:
+    except:  data = []
+    finally:
       length = len(data)
       for url in urls:
         if url not in data:  data.append(url)
-    finally:
       db[ctx.author.id] = json.dumps(data)
       await ctx.send(f"已儲存 `{len(data)-length}` 個網址", delete_after=3)
 
@@ -136,6 +135,25 @@ class URLprocessing(Cog_Ext):
           del urls[start-1:end]
         db[target] = json.dumps(urls)
         await ctx.send('指定網址已刪除', delete_after=3)
+
+  @cog_ext.cog_subcommand(base='url', name='download', description='將網址存為檔案，並將資料庫清空', options=[
+                          create_option(name='user', description='指定使用者', option_type=6, required=False)])
+  async def url_download(self, ctx, user:discord.Member=None):
+    if user and await self.bot.is_owner(ctx.author):  target = user.id
+    else:  target = ctx.author.id
+    
+    try:  data = json.loads(db[target])
+    except:  await ctx.send("無網址資料", delete_after=3)
+    else:
+      line = '{0}. <a href="{1}" target="_blank">{1}</a><br>\n'
+      with open('urls.html', mode='w') as f:
+        f.write(f'{user.name}儲存的網址<br>')
+        for i, url in enumerate(data):
+          f.write(line.format(i, url))
+      await ctx.send("檔案已發送至私訊", delete_after=3)
+      await ctx.author.send("", file=discord.File('urls.html'))
+      await self.url_clear(ctx, user)
+      os.remove("urls.html")
 
 
 def setup(bot):

@@ -81,7 +81,8 @@ class slashCommands(Cog_Ext):
       await ctx.send("輸入的參數類型錯誤", hidden=True)
     else:
       await ctx.send(f"發生例外錯誤 {ex}，已進行紀錄", hidden=True)
-    await self.bot.get_channel(812628283631206431).send(f"指令：/{ctx.name}(id:{ctx.command_id}, by:{ctx.author.mention})\n錯誤：{ex}")
+    if not await self.bot.is_owner(ctx.author):
+      await self.bot.get_channel(812628283631206431).send(f"指令：/{ctx.name}(id:{ctx.command_id}, by:{ctx.author.mention})\n錯誤：{ex}")
 
   @commands.Cog.listener()
   async def on_slash_command(self, ctx):

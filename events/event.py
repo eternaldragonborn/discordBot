@@ -67,7 +67,8 @@ class Events(Cog_Ext):
         error_cmd = getattr(Errors, error_command)
         await error_cmd(self, ctx, error)
       else:
-        await self.bot.get_channel(812628283631206431).send(f"指令：{ctx.message.content}(by {ctx.author.mention})\n錯誤：{error}")
+        if not self.bot.is_owner(ctx.author):
+          await self.bot.get_channel(812628283631206431).send(f"指令：{ctx.message.content}(by {ctx.author.mention})\n錯誤：{error}")
         await Errors.default_error(self, ctx, error)
 
 
