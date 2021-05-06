@@ -1,5 +1,5 @@
 import datetime, discord, MySQLdb
-from core.classes import Cog_Ext
+from core import CogInit
 from discord.ext import commands
 from core.wrFiles import *
 from discord_slash import cog_ext
@@ -32,16 +32,17 @@ def date_valid(ctx, date):
     if not date <= (get_time()): raise DateInvaild('日期不合理')
     else: return
 
-class SUBSCRIBE(Cog_Ext):
+class SUBSCRIBE(CogInit):
   
   async def print_overview(self):
     setting = readFile("setting")
     message = "訂閱總覽(如內容有誤需要更改請告知管理者)\n>>> "
-    artists = SQL_inquiry('SELECT * FROM `artists` ORDER BY `subscriber`, `artist`')
+    artists = SQL_inquiry('''SELECT artists.artist, artists.subscriber, artists.mark FROM `artists` 
+                          NATURAL JOIN subscribers ORDER BY `subscribers`.addTime, subscriber, `artist`''')
     subscribers = {}
-    for artist in artists:  #將資料彙整為dict，{subscriber:[artist, mark]}
-      if artist[1] not in subscribers.keys():  subscribers[artist[1]] = [[artist[0], artist[3]]]  #dict中已有該訂閱者
-      else:  subscribers[artist[1]].append([artist[0], artist[3]])
+    for artist, subscriber, mark in artists:  #將資料彙整為dict，{subscriber:[artist, mark]}
+      if subscriber not in subscribers.keys():  subscribers[subscriber] = [[artist, mark]]  #dict中已有該訂閱者
+      else:  subscribers[subscriber].append([artist, mark])
       
     for subscriber, datas in subscribers.items():  #將dict轉為文字
       message += f"{subscriber}："
@@ -52,7 +53,7 @@ class SUBSCRIBE(Cog_Ext):
         
     try:  #已有總覽
       overview = await self.bot.get_channel(675956755112394753).fetch_message(setting["overview"])
-    except:
+    except:  #無總覽，發出總覽訊息
       msg = await self.bot.get_channel(675956755112394753).send(message)
       await msg.pin()
       setting["overview"] = msg.id
@@ -69,7 +70,7 @@ class SUBSCRIBE(Cog_Ext):
       await self.print_overview()
       if message:
         if send_msg:  await ctx.send(message)
-        await self.bot.get_channel(740196718477312061).send(f"{get_time()}\t{message}")
+        await self.bot.get_channel(740196718477312061).send(f"{message}")
       return True
     
   async def actionCheck(self, msg, author):
@@ -95,11 +96,14 @@ class SUBSCRIBE(Cog_Ext):
                     ])
   async def new_subscriber(self, ctx, subscriber, download_url, preview_url=None):
     if managerCheck(ctx):
+      await ctx.defer()
       subscriber = subscriber.mention.replace('!', '')
       if SQL_getData('subscribers', 'subscriber', subscriber):  await ctx.send(f"{subscriber} 已在訂閱者名單", hidden=True)
       else:
         download_url = download_url.replace(' ', '\n')
+        if '\n' in download_url:  download_url= '\n'+download_url
         if preview_url != None:  #有預覽網址
+          if '\n' in preview_url:  preview_url= '\n'+preview_url
           preview_url = preview_url.replace(' ', '\n')
           query = (f'''INSERT INTO subscribers(subscriber, preview_url, download_url)
                      VALUES("{subscriber}", "{preview_url}", "{download_url}")''')
@@ -108,6 +112,7 @@ class SUBSCRIBE(Cog_Ext):
                      VALUES("{subscriber}", "{download_url}")''')
         message = f"新訂閱者:{subscriber}(by {ctx.author.mention})"
         await self.changeData(ctx, query, message)
+    else:  await ctx.send("沒有權限或頻道錯誤", hidden=True)
 
   @cog_ext.cog_subcommand(base='manage', subcommand_group='subscriber', name='delete', 
                     description='刪除訂閱者及其訂閱的繪師資料，限管理員使用', guild_ids=guildID,
@@ -116,6 +121,7 @@ class SUBSCRIBE(Cog_Ext):
                     ])
   async def delete_subscriber(self, ctx, subscriber):
     if managerCheck(ctx):
+      await ctx.defer()
       subscriber = subscriber.mention.replace('!', '')
       if SQL_getData('subscribers', 'subscriber', subscriber):
         artists = SQL_getData('artists', 'subscriber', subscriber)
@@ -133,7 +139,9 @@ class SUBSCRIBE(Cog_Ext):
           message = f"訂閱紀錄：{ctx.author.mention} 刪除了 {subscriber} 的資料"
           await self.changeData(ctx, query, message)
         else:  await ctx.send("刪除訂閱者資料取消", delete_after=5)
+
       else:  await ctx.send(f"{subscriber} 不在訂閱者名單內", hidden=True)
+    else:  await ctx.send("沒有權限或頻道錯誤", hidden=True)
 
   @cog_ext.cog_subcommand(base='manage', subcommand_group='artist', name='add',
                     description='新增訂閱紀錄，限管理員使用', guild_ids=guildID,
@@ -161,6 +169,7 @@ class SUBSCRIBE(Cog_Ext):
             query = f'INSERT INTO `artists`(`artist`, `subscriber`, `lastUpdateTime`) VALUES("{artist}", "{subscriber}", "{lastUpdate}")'
           message = f"訂閱紀錄：{subscriber} 訂閱了 `{artist}`(by{ctx.author.mention})"
           await self.changeData(ctx, query, message)
+    else:  await ctx.send("沒有權限或頻道錯誤", hidden=True)
 
   @cog_ext.cog_subcommand(base='manage', subcommand_group='artist', name='delete',
                     description='取消訂閱，限管理員使用', guild_ids=guildID,
@@ -179,6 +188,7 @@ class SUBSCRIBE(Cog_Ext):
           await self.changeData(ctx, query, message)
       else:
         await ctx.send(f"無人訂閱 {artist[0]}", delete_after = 5)
+    else:  await ctx.send("沒有權限或頻道錯誤", hidden=True)
 
   @cog_ext.cog_subcommand(base='manage', subcommand_group='artist', name='change_subscriber', 
                     description='更改訂閱者，限管理員使用', guild_ids=guildID,
@@ -201,7 +211,7 @@ class SUBSCRIBE(Cog_Ext):
             message = f"訂閱紀錄：{ctx.author.mention} 將 `{artist[0]}` 由 {artist[1]} 改為 {newsubscriber} 訂閱"
             await self.changeData(ctx, query, message)
       else:  await ctx.send("新訂閱者不在訂閱者名單內或繪師尚未被訂閱", delete_after = 5)
-    else:  await ctx.send("沒有權限或無此ID", delete_after = 5)
+    else:  await ctx.send("沒有權限或頻道錯誤", hidden=True)
   
   @cog_ext.cog_subcommand(base='subscribe', description='更新常態訂閱的繪師圖包', guild_ids=guildID,
                     options=[
@@ -218,13 +228,16 @@ class SUBSCRIBE(Cog_Ext):
     else:
       for artist in artists:
         await ctx.defer()
-        artist_data = SQL_getData("artists", 'artist', artist, 1)
-        if artist_data:
-          if authorCheck(ctx, artist_data[1]):
+        data = SQL_inquiry(f'''SELECT `artists`.`artist`, `artists`.`subscriber`, 
+                          `subscribers`.`preview_url`, `subscribers`.`download_url` 
+                          FROM `artists` NATURAL JOIN `subscribers` 
+                          WHERE `artist`="{artist}"''', 1)
+        if data:  #[artist, subscriber, preview, download]
+          if authorCheck(ctx, data[1]):
             query = f'UPDATE `artists` SET `lastUpdateTime`="{timestamp}", `status`=0 WHERE `artist`="{artist}"'
-            if await self.changeData(ctx, query, f"{artist_data[1]} 於 {timestamp} 更新了 `{artist}`", False):
-              subscriber = SQL_getData("subscribers", "subscriber", artist_data[1], 1)
-              await ctx.send(f"{subscriber[0]} 於 `{timestamp}` 更新了 `{artist}`\n>>> 預覽：{subscriber[1]}\n下載：{subscriber[2]}")
+            msg = f"{data[1]} 於 `{timestamp}` 更新了 `{artist}`"
+            if await self.changeData(ctx, query, msg, False):
+              await ctx.send(f"{msg} \n>>> 預覽：{data[2]}\n下載：{data[3]}")
           else:
             await ctx.send(f"你不是 `{artist}` 的訂閱者或頻道錯誤", delete_after = 5)
             break
@@ -242,20 +255,22 @@ class SUBSCRIBE(Cog_Ext):
         if authorCheck(ctx, artist_data[1]):
           query = f'UPDATE `artists` SET `lastUpdateTime`="{str(get_time())}", `status`=2 WHERE `artist`="{artist}"'
           await self.changeData(ctx, query, f"{artist_data[1]}：`{artist}`本月沒有更新")
-        else:  await ctx.send(f"你不是 `{artist}` 的訂閱者", delete_after = 5)
+        else:  
+          await ctx.send("沒有權限或頻道錯誤", hidden=True)
+          break
       else:  await ctx.send(f"無 `{artist}` 此繪師的訂閱紀錄", delete_after = 5)
   
-  @cog_ext.cog_subcommand(base='subscribe', name='editURL', description='更改網址', guild_ids=guildID,
+  @cog_ext.cog_subcommand(base='subscribe', subcommand_group='url', name='edit', description='更改網址', guild_ids=guildID,
                     options=[
-                      create_option(name='item', description='要更改的網址項目', option_type=4, required=True, 
+                      create_option(name='item', description='要更改的網址項目', option_type=3, required=True, 
                       choices=[
-                        create_choice(0, '預覽網址'),
-                        create_choice(1, '下載網址')
+                        create_choice('preview_url', '預覽網址'),
+                        create_choice('download_url', '下載網址')
                       ]),
                       create_option(name='url', description='新網址，空格將自動取代為換行', option_type=3, required=True),
                       create_option(name='subscriber', description='更改網址的訂閱者，限管理員使用', option_type=6, required=False)
                     ])
-  async def edit_subscriber(self, ctx, item, url, subscriber=None): #item:0->預覽，1->下載
+  async def edit_url(self, ctx, item, url, subscriber:discord.Member=None): #item:0->預覽，1->下載
     if subscriber == None:  subscriber = ctx.author.mention.replace('!', '')
     else:  subscriber = subscriber.mention.replace('!', '')
     
@@ -263,35 +278,61 @@ class SUBSCRIBE(Cog_Ext):
     else:
       url = url.split(' ')
       url = '\n'.join(url)
+      if '\n' in url:  url = '\n'+url
       
     if authorCheck(ctx, subscriber):
       if not SQL_getData('subscribers', 'subscriber', subscriber, 1):  
         await ctx.send(f"{subscriber} 不在訂閱者名單內", delete_after = 5)
       else:
-        query = 'UPDATE `subscribers` SET '
-        if item == 0:  query += f'`preview_url`="{url}"'
-        elif item == 1: query += f'`download_url`="{url}"'
-        query += f'WHERE `subscriber`="{subscriber}"'
+        query = f'UPDATE `subscribers` SET `{item}`="{url}" WHERE `subscriber`="{subscriber}"'
         if await self.changeData(ctx, query):  await ctx.send("更改成功", hidden=True)
-    else:  await ctx.send("沒有權限", delete_after = 5)
+    else:  await ctx.send("沒有權限或頻道錯誤", hidden=True)
+
+  @cog_ext.cog_subcommand(base='subscribe', subcommand_group='url', name='append', description='網址擴展(輸入的網址將加在原有的下一行)', 
+                    guild_ids=guildID, options=[
+                      create_option(name='item', description='要更改的網址項目', option_type=3, required=True, 
+                      choices=[
+                        create_choice('preview_url', '預覽網址'),
+                        create_choice('download_url', '下載網址')
+                      ]),
+                      create_option(name='url', description='新網址，空格將自動取代為換行', option_type=3, required=True),
+                      create_option(name='subscriber', description='更改網址的訂閱者，限管理員使用', option_type=6, required=False)
+                    ])
+  async def url_append(self, ctx, item, url, subscriber:discord.Member=None):
+    if subscriber == None:  subscriber = ctx.author.mention.replace('!', '')
+    else:  subscriber = subscriber.mention.replace('!', '')
+
+    url = url.split(' ')
+    url = '\n'+'\n'.join(url)
+    if authorCheck(ctx, subscriber):
+      data = SQL_inquiry(f'SELECT `{item}` FROM `subscribers` WHERE `subscriber`={subscriber}', 1)
+      if not data:
+        await ctx.send(f"{subscriber} 不在訂閱者名單內", delete_after = 5)
+      else:
+        url = data + url
+        query = f'UPDATE `subscribers` SET `{item}`="{url}" WHERE `subscriber`="{subscriber}"'
+        if await self.changeData(ctx, query):  await ctx.send("更改成功", hidden=True)
+    else:  await ctx.send("沒有權限或頻道錯誤", hidden=True)
 
 
   async def info(self, ctx, target, target_type):
     if channelCheck(ctx):
       if target_type == 0:  #訂閱者
-        subscriber = SQL_getData('subscribers', 'subscriber', target, 1)
-        if subscriber:
-          artists = SQL_getData('artists', 'subscriber', subscriber[0])
-          message = f"{subscriber[0]}：\n>>> 訂閱繪師："
+        query = f'''SELECT artists.artist, artists.mark, subscribers.preview_url, subscribers.download_url
+                    FROM artists LEFT JOIN subscribers ON artists.subscriber=subscribers.subscriber 
+                    WHERE artists.subscriber = "{target}"'''
+        data = SQL_inquiry(query)
+        if data:
+          message = f"{target}：\n>>> 訂閱繪師："
           
-          if len(artists) == 0:  message += "無"  #無訂閱繪師
+          if len(data) == 0:  message += "無"  #無訂閱繪師
           else:
-            for artist in artists:
-              message += f" `{artist[0]}`{artist[3]} "
-              if artist != artists[-1]:  message += "、"
-          message += f'\n預覽：{subscriber[1]}\n下載：{subscriber[2]}'
+            for artist in data:
+              message += f" `{artist[0]}`{artist[1]} "
+              if artist != data[-1]:  message += "、"
+          message += f'\n預覽：{data[0][2]}\n下載：{data[0][3]}'
           await ctx.send(message, hidden=True)
-        else:  await ctx.send("無此訂閱者")
+        else:  await ctx.send("無此訂閱者或該訂閱者沒訂閱任何繪師", hidden=True)
         
       elif target_type == 1:  #繪師
         artist = SQL_getData('artists', 'artist', target, 1)
@@ -323,18 +364,19 @@ class SUBSCRIBE(Cog_Ext):
   async def check(self, ctx):
     if managerCheck(ctx):
       limitDate = get_time() - datetime.timedelta(days=30)  #30天前的日期
-      query = f'SELECT * FROM `artists` WHERE `lastUpdateTime` < "{limitDate}" ORDER BY `subscriber`, `lastUpdateTime`' #查詢上次更新日期小於30天前日期的繪師
+      query = f'SELECT artist, subscriber, status, lastUpdateTime FROM `artists` WHERE `lastUpdateTime` < "{limitDate}" ORDER BY `subscriber`, `lastUpdateTime`' #查詢上次更新日期小於30天前日期的繪師
       nonupdateArtists = SQL_inquiry(query)
       message = '超過(含)30天未更新：\n>>> '
       if nonupdateArtists:  #有未更新的繪師
       
         subscribers = {}
-        for artist in nonupdateArtists:  #將繪師及其訂閱者整理為dict，{subscriber:[artist, lastUpdateTime]}
-          if artist[4] == 1:  data = [artist[0], '新增訂閱資料後未更新']
-          else:  data = [artist[0], str(artist[2])]
+        for artist, subscriber, status, lastUpdateTime in nonupdateArtists:  #將繪師及其訂閱者整理為dict
+          if status == 1:  lastUpdateTime = '新增訂閱資料後未更新'
+          else:  lastUpdateTime = lastUpdateTime.strftime("%m-%d")
+          data = [artist, lastUpdateTime]
           
-          if artist[1] not in subscribers.keys():  subscribers[artist[1]] = [data]
-          else:  subscribers[artist[1]].append(data)
+          if subscriber not in subscribers.keys():  subscribers[subscriber] = [data]
+          else:  subscribers[subscriber].append(data)
           
         for subscriber, datas in subscribers.items():  #轉為要顯示的文字
           message += f'{subscriber}：'
@@ -361,6 +403,7 @@ class SUBSCRIBE(Cog_Ext):
         if not artist:  await ctx.send(f"{subscriber[0]} 上傳了圖包\n>>> 下載網址：\n{subscriber[2]}")  #有填寫繪師名稱
         else:  await ctx.send(f"{subscriber[0]} 上傳了 `{artist}` 的圖包\n>>> 下載網址：\n{subscriber[2]}")
       else:  await ctx.send("訂閱者名單中沒有 {subscriber[0]} 這個人", delete_after = 3)
+    else:  await ctx.send("沒有權限或頻道錯誤", hidden=True)
     
   @commands.Cog.listener()
   async def on_message_delete(self, message):

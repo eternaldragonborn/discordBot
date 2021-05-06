@@ -1,10 +1,8 @@
-import discord
+import discord, random, re
 from discord.ext import commands
-from core.classes import Cog_Ext
-import random
-import re
+from core import CogInit
 
-class dice(Cog_Ext):
+class dice(CogInit):
 
   @commands.Cog.listener()
   async def on_message(self, msg):

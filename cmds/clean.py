@@ -1,8 +1,8 @@
 import discord
 from discord.ext import commands
-from core.classes import Cog_Ext
+from core import CogInit
 
-class CLEAN(Cog_Ext):
+class CLEAN(CogInit):
   @commands.command(usage = "+clean <最大數量>", help = "清理bot的訊息")
   async def clean(self, ctx, limit :int =999, target ="<@719120395571298336>"):
     target = int(target.replace("!", "")[2:-1])

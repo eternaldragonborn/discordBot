@@ -1,12 +1,12 @@
 import discord
 from discord.ext import commands
-import core.wrFiles
-from core.classes import Cog_Ext
+from core import readFile, writeFile
+from core import CogInit
 
-urls = core.wrFiles.readFile("others")
-authorId = core.wrFiles.readFile("setting")["authorId"]
+urls = readFile("others")
+authorId = readFile("setting")["authorId"]
 
-class EDIT_URL(Cog_Ext):
+class EDIT_URL(CogInit):
   @commands.command(hidden = True, usage = "+add_url 分類 網址 <權重>")
   async def add_url(self, cxt, item, url, weight :int=1):
     if cxt.author.id == authorId:
@@ -29,7 +29,7 @@ class EDIT_URL(Cog_Ext):
           await cxt.send("新增失敗", delete_after = 3)
         else:
           await cxt.send("新增完畢", delete_after = 3)
-      core.wrFiles.writeFile("others", urls)
+      writeFile("others", urls)
     await cxt.message.delete()
 
   @commands.command(hidden = True, usage = "+del_url 分類 <網址>")
@@ -42,7 +42,7 @@ class EDIT_URL(Cog_Ext):
           await cxt.send("刪除失敗", delete_after = 3)
         else:
           await cxt.send("刪除成功", delete_after = 3)
-          core.wrFiles.writeFile("others", urls)
+          writeFile("others", urls)
       else:
         try:
           del urls[item][url]
@@ -50,7 +50,7 @@ class EDIT_URL(Cog_Ext):
           await cxt.send("刪除失敗", delete_after = 3)
         else:
           await cxt.send("刪除成功", delete_after = 3)
-          core.wrFiles.writeFile("others", urls)
+          writeFile("others", urls)
     await cxt.message.delete()
 
   @commands.command(hidden = True, usage = "+edit_weight 分類 網址 權重")
@@ -63,7 +63,7 @@ class EDIT_URL(Cog_Ext):
         print(e,"\n")
       else:
         await ctx.send("更改成功", delete_after = 3)
-        core.wrFiles.writeFile("others", urls)
+        writeFile("others", urls)
     await ctx.message.delete()
   
 

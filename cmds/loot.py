@@ -1,8 +1,6 @@
-from core.classes import Cog_Ext
-import discord
+from core import CogInit, readFile
+import discord, random
 from discord.ext import commands
-import random
-from core.wrFiles import readFile
 
 statu = 0
 participants = []
@@ -13,7 +11,7 @@ winners = []
 botId = readFile("setting")["botId"]
 
 
-class Loot(Cog_Ext):
+class Loot(CogInit):
     @commands.command()
     async def loot(self, ctx, n: int =1, *, arg=""):
         global statu

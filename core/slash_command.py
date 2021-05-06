@@ -4,7 +4,7 @@ import os
 
 
 api = 'https://discord.com/api/v8/'
-headers = {"Authorization": f"Bot {os.environ['bot_token']}"}
+headers = {"Authorization": f"Bot {os.environ['BOT_TOKEN']}"}
 
 myID = 384233645621248011
 applicationID = 719120395571298336

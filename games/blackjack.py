@@ -1,10 +1,6 @@
-import discord
+import discord, random, datetime
 from discord.ext import commands
-from core.classes import Cog_Ext
-from core.wrFiles import readFile
-import random
-import datetime
-
+from core import CogInit, readFile
 
 is_started = False
 in_game = False
@@ -63,7 +59,7 @@ def point_check(player):
     return p
 
 
-class BLACKJACK(Cog_Ext):
+class BLACKJACK(CogInit):
 
   async def end_game(self):
     global participants

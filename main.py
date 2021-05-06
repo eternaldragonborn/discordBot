@@ -1,7 +1,7 @@
 #!/opt/virtualenvs/python3/bin/python
 import discord, os, logging
 from discord.ext import commands
-from core.keep_alive import keep_alive
+from core import keep_alive
 from discord_slash import SlashCommand
 
 logger = logging.getLogger('discord')
@@ -15,7 +15,7 @@ bot = commands.Bot(command_prefix='+', owner_id = 384233645621248011)
 bot.remove_command("help")
 slash = SlashCommand(bot, override_type=True, sync_commands=True, sync_on_cog_reload=True)
 
-token = os.environ['bot_token']
+token = os.environ['BOT_TOKEN']
 
 @bot.event
 async def on_ready():

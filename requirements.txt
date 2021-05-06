@@ -3,4 +3,5 @@ discord-py-slash-command
 mysqlclient
 flask
 redis
-replit
+munch
+pynacl

@@ -1,8 +1,7 @@
 import discord
 from discord.ext import commands
-from core.classes import Cog_Ext
+from core import CogInit, readFile
 from random import randint as rand
-from core.wrFiles import readFile
 from random import choice
 
 images = readFile("others")["an-jia"]
@@ -32,7 +31,7 @@ def bzz(amount):
 
 functions = [dice, coin, bzz]
 
-class An_Jia(Cog_Ext):
+class An_Jia(CogInit):
   
   @commands.command(aliases = ["aj_s"], usage = '+aj_s <安價敘述> <方法> <項目個數>(方法為擲骰時代表骰子面數)', help = '開始安價，+aj_e 可強制結束\n方法：0:擲骰, 1:硬幣, 2:4色籤')
   async def start_An_Jia(self, ctx, item="", method:int = -1, times:int = 1):

@@ -1,14 +1,13 @@
 import discord
 from discord.ext import commands
-from core.classes import Cog_Ext
+from core import CogInit, slash_command
 from discord_slash.utils.manage_commands import create_option, create_choice
 from discord_slash import cog_ext, error
-from core import slash_command
 from core.wrFiles import writeFile
 
 guildID = [719132687897591808]
 
-class slashCommands(Cog_Ext):
+class slashCommands(CogInit):
 
   @cog_ext.cog_subcommand(base='command', name='get_list', description='取得斜線指令列表',
                           options=[

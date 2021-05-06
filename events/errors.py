@@ -1,9 +1,9 @@
 import discord
 from discord.ext import commands
-from core.classes import Cog_Ext
+from core import CogInit
 from games.an_jia import An_Jia
 
-class Errors(Cog_Ext):
+class Errors(CogInit):
 
   @An_Jia.start_An_Jia.error
   async def start_An_Jia_error(self, ctx, error):
@@ -16,7 +16,7 @@ class Errors(Cog_Ext):
     elif isinstance(error, commands.BadArgument):
       await ctx.send("參數類別轉換錯誤，請確認是否輸入正確", delete_after = 5)
     else:
-      await ctx.send("發生例外錯誤", delete_after = 5)
+      await ctx.send(f"發生例外錯誤：{error}", delete_after = 5)
 
 def setup(bot):
   bot.add_cog(Errors(bot))

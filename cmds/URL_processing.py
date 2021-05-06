@@ -1,13 +1,13 @@
-from core.classes import Cog_Ext
+from core import CogInit
 import requests, os, discord, re, json
 from discord_slash.utils.manage_commands import create_option
 from discord_slash import cog_ext
 from discord.ext import commands
-from replit import db
+from cmds.redisDB import get_data, set_data
 
 headers = {
     'Content-Type': 'application/json',
-    'reurl-api-key': f'{os.environ["reurl_key"]}',
+    'reurl-api-key': f'{os.environ["REURL_KEY"]}',
 }
 
 urlPattern = re.compile(r'https?://([\w\-]+\.)+[\w\-]+(/[\w\-./?%&=]*)?')
@@ -18,7 +18,7 @@ def shorten(url):
   data = '{"url": "%s"}' % url
   return requests.post('https://api.reurl.cc/shorten', headers=headers, data=data)
 
-class URLprocessing(Cog_Ext):
+class URLprocessing(CogInit):
   
   @cog_ext.cog_subcommand(base='url', name='shorten', description='縮短網址', options=[
                     create_option(name='url', description='欲縮短的網址', option_type=3, required=True)
@@ -31,13 +31,13 @@ class URLprocessing(Cog_Ext):
     else:  await ctx.send(f"發生錯誤，{dict(r.json())['msg']}", hidden=True)
 
   async def store_url(self, ctx, urls:list):
-    try:  data = json.loads(db[ctx.author.id])
+    try:  data = get_data(ctx.author.id)
     except:  data = []
     finally:
       length = len(data)
       for url in urls:
         if url not in data:  data.append(url)
-      db[ctx.author.id] = json.dumps(data)
+      set_data(ctx.author.id, data)
       await ctx.send(f"已儲存 `{len(data)-length}` 個網址", delete_after=3)
 
   @commands.command(aliases=['url_s', 'save'])
@@ -83,8 +83,11 @@ class URLprocessing(Cog_Ext):
     if user and await self.bot.is_owner(ctx.author):
       target = user.id
     else:  target = ctx.author.id
-    try:  urls = json.loads(db[target])
-    except:  await ctx.send("資料庫內沒儲存的網址", delete_after=3)
+
+    try:  urls = get_data(target)
+    except Exception as e:  
+      await ctx.send("資料庫內沒儲存的網址", delete_after=3)
+      print(e)
     else:
       msg = ''
       for i, url in enumerate(urls):
@@ -95,15 +98,14 @@ class URLprocessing(Cog_Ext):
       await ctx.send(msg, hidden=True)
 
   @cog_ext.cog_subcommand(base='url', name='count', description='顯示已存多少網址', options=[
-                          create_option('user', '指定使用者', 6, False)
-                          ])
+                          create_option('user', '指定使用者', 6, False)])
   async def url_count(self, ctx, user:discord.Member=None):
     if user and await self.bot.is_owner(ctx.author):
       target = user.id
     else:
       target = ctx.author.id
     try:
-      urls = json.loads(db[target])
+      urls = get_data(target)
     except:
       await ctx.send("資料庫內沒儲存的網址", delete_after=3)
     else:
@@ -120,29 +122,28 @@ class URLprocessing(Cog_Ext):
     else:
       target = ctx.author.id
     try:
-      db[target]
+      get_data(target)
     except:
       await ctx.send("資料庫內沒儲存的網址", delete_after=3)
     else:
       if not start:
-        del db[target]
+        set_data(target)
         await ctx.send("儲存的網址已清空", delete_after=3)
       else:
-        urls = json.loads(db[target])
+        urls = get_data(target)
         if not end:
           del urls[start-1]
         else:
           del urls[start-1:end]
-        db[target] = json.dumps(urls)
+        set_data(target, urls)
         await ctx.send('指定網址已刪除', delete_after=3)
 
   @cog_ext.cog_subcommand(base='url', name='download', description='將網址存為檔案，並將資料庫清空', options=[
                           create_option(name='user', description='指定使用者', option_type=6, required=False)])
   async def url_download(self, ctx, user:discord.Member=None):
-    if user and await self.bot.is_owner(ctx.author):  target = user.id
-    else:  target = ctx.author.id
+    if not user or not await self.bot.is_owner(ctx.author):  user = ctx.author
     
-    try:  data = json.loads(db[target])
+    try:  data = get_data(user.id)
     except:  await ctx.send("無網址資料", delete_after=3)
     else:
       line = '{0}. <a href="{1}" target="_blank">{1}</a><br>\n'
@@ -152,7 +153,7 @@ class URLprocessing(Cog_Ext):
           f.write(line.format(i, url))
       await ctx.send("檔案已發送至私訊", delete_after=3)
       await ctx.author.send("", file=discord.File('urls.html'))
-      await self.url_clear(ctx, user)
+      set_data(user.id)
       os.remove("urls.html")
 
 
