@@ -1,8 +1,10 @@
 #!/opt/virtualenvs/python3/bin/python
 import discord, os, logging
 from discord.ext import commands
-from core import keep_alive
+from dotenv import load_dotenv
 from discord_slash import SlashCommand
+
+load_dotenv()
 
 logger = logging.getLogger('discord')
 logger.setLevel(logging.WARNING)
@@ -39,6 +41,7 @@ initialization("events")
 
 initialization("games")
 
+from core import keep_alive
 if __name__ == "__main__":
     keep_alive()
     try:

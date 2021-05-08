@@ -21,17 +21,17 @@ class Events(CogInit):
       else:
         delete_time = 7
       if re.search(r'[rR啊阿ㄚ痾]{4,}', msg.content):
-        await msg.channel.send(f"{msg.author.mention}\n{choice_url('rrr')}", delete_after=delete_time)
+        await msg.reply(choice_url('rrr'), delete_after=delete_time)
       if "loading cat" in msg.content.lower():
         await msg.channel.send(choice_url("loadingCat"), delete_after=delete_time)
       if SAO.search(msg.content.lower()) or SAO.search(msg.author.display_name) or "<:098:719589717955575879>" in msg.content:   #太快ㄌ
         await msg.add_reaction("\N{THUMBS DOWN SIGN}")
       if "虫合" in msg.content or "蛤" in msg.content:
         await msg.channel.send(choice_url("what"), delete_after=delete_time)
-      if re.search(r'[he]m{3,}|\N{THINKING FACE}', msg.content.lower()):
+      if re.search(r'[uhe]m{3,}|\N{THINKING FACE}', msg.content.lower()):
         await msg.channel.send(choice_url("emm"), delete_after = delete_time)
       if self.bot.user in msg.mentions:
-        reply = random.choices([f"{msg.author.mention} 吼嗚?", "嘎嘎嘎", "作者很懶，沒留下任何回覆。"], weights = [7,7,3])[0]
+        reply = random.choices(["吼嗚?", "嘎嘎嘎", "作者很懶，沒留下任何回覆。"], weights = [7,7,3])[0]
         await msg.reply(reply)
       if "並沒有" in msg.content or "不要瞎掰" in msg.content:
         await msg.channel.send(choice_url("not"), delete_after = delete_time)
@@ -39,9 +39,9 @@ class Events(CogInit):
         await msg.channel.send(choice_url("yeah"),delete_after = delete_time)
       if re.match(r"派[耶欸ㄟ]",msg.content):
         await msg.channel.send(choice_url("pie"), delete_after = delete_time)
-      if re.search(r'[打揍殺屠砍幹尻][\s\n\W]*[龍竜(多拉貢)]', msg.content) and not await self.bot.is_owner(msg.author):
+      if re.search(r'[獵打揍殺屠砍幹尻肏淦][\s\n\W]*[龍竜(多拉貢)]', msg.content) and not await self.bot.is_owner(msg.author):
         await msg.reply('<:092:819621685010366475>'*3)
-      if re.search(r'([＼／\\\|/]\s?){3}|(上香)|(:021:)|(:034:)', msg.content):
+      if re.search(r'([＼／\\\|/l]\s?){3}|(上香)|(:021:)|(:034:)', msg.content):
         await msg.reply(choice_url('pray'))
 
   @commands.command()
