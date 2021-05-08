@@ -1,8 +1,9 @@
 discord
+discord.py
 discord-py-slash-command
 mysqlclient
 flask
 redis
-munch
+addict
 pynacl
-dotenv
+python-dotenv
