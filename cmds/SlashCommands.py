@@ -108,44 +108,34 @@ class slashCommands(CogInit):
   #修改指令權限
   @cog_ext.cog_subcommand(base='command', subcommand_group='permission', name='edit', description='修改斜線指令權限',
                           options=[
+                            create_option(name='target', description='要修改權限的user/role', option_type=9, required=True),
+                            create_option(name='target_type', description='ID種類', option_type=4, required=True,
+                                          choices=[create_choice(1, '身分組'), create_choice(2, '使用者')]),
                             create_option(name='permission', description='權限', option_type=3, required=True,
                                           choices=[create_choice('True', '是'), create_choice('False', '否')]),
                             create_option(name='guildid', description='伺服器ID', option_type=3, required=True),
-                            create_option(name='command_name', description='指令名稱', option_type=3, required=True),
-                            create_option(name='user', description='要設定權限的使用者', option_type=6, required=False),
-                            create_option(name='role', description='要設定權限的身分組', option_type=8, required=False)
+                            create_option(name='command_name', description='指令名稱', option_type=3, required=True)
                           ])
-  async def edit_command_permission(self, ctx, permission, guildid, command_name, user: discord.User=None, role: discord.Role=None):
+  async def edit_command_permission(self, ctx, target, target_type, permission, guildid, command_name):
     command_id = self.cmd_mapping(command_name)
-    if role:
-      r = edit_permission(role.id, 1, permission, guildid, command_id)
-    elif user:
-      r = edit_permission(user.id, 2, permission, guildid, command_id)
-    else:
-      await ctx.send("無指定任何對象", hidden=True)
-      return
+    r = edit_permission(target, target_type, permission, guildid, command_id)
     await ctx.send(r, hidden=True)
 
   #在現有的權限後方擴充權限
   @cog_ext.cog_subcommand(base='command', subcommand_group='permission', name='append', description='擴充斜線指令權限',
                           options=[
+                            create_option(name='target', description='要修改權限的user/role', option_type=9, required=True),
+                            create_option(name='target_type', description='ID種類', option_type=4, required=True,
+                                          choices=[create_choice(1, '身分組'), create_choice(2, '使用者')]),
                             create_option(name='permission', description='權限', option_type=3, required=True,
                                           choices=[create_choice('True', '是'), create_choice('False', '否')]),
                             create_option(name='guildid', description='伺服器ID', option_type=3, required=True),
-                            create_option(name='command_name', description='指令名稱', option_type=3, required=True),
-                            create_option(name='user', description='要設定權限的使用者', option_type=6, required=False),
-                            create_option(name='role', description='要設定權限的身分組', option_type=8, required=False)
+                            create_option(name='command_name', description='指令名稱', option_type=3, required=True)
                           ])
-  async def append_command_permission(self, ctx, permission, guildid, command_name, user: discord.User=None, role: discord.Role=None):
+  async def append_command_permission(self, ctx, target, target_type, permission, guildid, command_name):
     command_id = self.cmd_mapping(command_name)
     old_permissions = get_command_permissions(guildid, command_id)
-    if role:
-      r = edit_permission(role.id, 1, permission, guildid, command_id, old_permissions)
-    elif user:
-      r = edit_permission(user.id, 2, permission, guildid, command_id, old_permissions)
-    else:
-      await ctx.send("無指定任何對象", hidden=True)
-      return
+    r = edit_permission(target, target_type, permission, guildid, command_id, old_permissions)
     await ctx.send(r, hidden=True)
   
   #slash command error handler
