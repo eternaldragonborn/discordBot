@@ -13,7 +13,8 @@ error_log = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='
 error_log.setFormatter(formatter)
 logger.addHandler(error_log)
 
-bot = commands.Bot(command_prefix='+', owner_id = 384233645621248011)
+intents = discord.Intents.all()
+bot = commands.Bot(command_prefix='+', owner_id = 384233645621248011, intents=intents)
 bot.remove_command("help")
 slash = SlashCommand(bot, override_type=True, sync_commands=True, sync_on_cog_reload=True)
 

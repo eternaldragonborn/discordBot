@@ -1,15 +1,22 @@
 # coding=utf-8
 # -*- coding: UTF-8 -*-
-import json, MySQLdb, os
+import yaml, MySQLdb, os, json
+from typing import Union
 
-def readFile(file):
-    with open(f"{file}.json", "r", encoding="utf8") as f:
-        return json.load(f)
+def readFile(file: str):
+  with open(f"{file}.json", "r", encoding="utf8") as f:
+    return json.load(f)
 
-def writeFile(file, data):
-    with open(f"{file}.json", "w", encoding="utf8") as f:
-        json.dump(data, f, indent="\t")
-    return
+def read_yaml(file: str) -> Union[list, dict]:
+  with open(file + '.yaml', 'r', encoding='utf8') as f:
+    data =  yaml.safe_load(f)
+    if not data:  return {}
+    else:  return data
+
+def write_yaml(file: str, data: Union[dict, list]) -> None:
+  with open(f"{file}.yaml", "w", encoding="utf8") as f:
+    yaml.safe_dump(data, f, encoding="utf8", allow_unicode=True)
+  return
 
 def conn():
   return MySQLdb.connect(host=os.environ['SQL_HOST'],

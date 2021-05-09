@@ -3,9 +3,6 @@ from discord.ext import commands
 import random, re, discord
 from events.errors import Errors
 
-authorId = readFile("setting")["authorId"]
-botId = readFile("setting")["botId"]
-
 def choice_url(item):
   url = readFile("others")[item]
   return str(random.choices(list(url.keys()), weights = list(url.values()))).strip("[]'")

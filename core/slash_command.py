@@ -1,15 +1,22 @@
 import requests
-from core.wrFiles import writeFile
+from core.wrFiles import write_yaml
 import os
+import yaml
+from addict import Dict
+from typing import Union
 
 
 api = 'https://discord.com/api/v8/'
 headers = {"Authorization": f"Bot {os.environ['BOT_TOKEN']}"}
 
-myID = 384233645621248011
 applicationID = 719120395571298336
 
-def edit_permission(ids:str, idType:int, permission:bool, guildID, commandID, oldPermission):
+class RequestFailed(Exception):
+  def __init__(self, reason):  self.reason = reason
+  def __str__(self):  return f"request failed, reason:{self.reason}"
+
+#編輯權限
+def edit_permission(ids:str, idType:int, permission:bool, guildID, commandID, oldPermission=None) -> str:
   url = f'/applications/{applicationID}/guilds/{guildID}/commands/{commandID}/permissions'
   
   ids = ids.split(',')
@@ -29,46 +36,49 @@ def edit_permission(ids:str, idType:int, permission:bool, guildID, commandID, ol
   }
    
   r = requests.put(f'{api}{url}', headers = headers, json=json)
-  if r.status_code != requests.codes.ok:
-    return r.reason
-  else:
+  if r.ok:
     return '更改成功'
-   
-def get_commands(guildID:int=None):  #only show id, name, default_permission
-   if guildID:
-      url = f'/applications/719120395571298336/guilds/{guildID}/commands'
-   else:
-      url = '/applications/719120395571298336/commands'
-   r = requests.get(f'{api}{url}', headers=headers)
-   if not r.ok:
-      return r.reason
-   else:
-    filename = 'slash_commands'
-    commands = []
-    for command in r.json():
-        commands.append({'id':command['id'], 'name':command['name'], 'default_permission':command['default_permission']})
-    writeFile(filename, commands)
-    return f'已寫入至`{filename}.json`檔案內'
+  else:
+    raise RequestFailed(r.reason)
+
+#取得指令列表
+def get_commands(guildID:int=None) -> list:
+  '''
+  回傳指令列表
+  '''
+  if guildID:
+    url = f'/applications/719120395571298336/guilds/{guildID}/commands'
+  else:
+    url = '/applications/719120395571298336/commands'
+  r = requests.get(f'{api}{url}', headers=headers)
+  if r.ok:
+    return r.json()
+  else:
+    raise RequestFailed(r.reason)
       
-      
-def edit_command(default_permission:bool, commandID:int, guildID:int=None):
-   if guildID:
-      url = f'/applications/{applicationID}/guilds/{guildID}/commands/{commandID}'
-   else:
-      url = f'/applications/{applicationID}/commands/{commandID}'
-   json = {    #name, description, options, default_permission
-           'default_permission':default_permission
-      }
-   r = requests.patch(f'{api}{url}', json=json, headers=headers)
-   if not r.ok:
-      return r.reason
-   else:
-      return '更改成功'
-      
-def get_command_permissions(guildID:int, commandID:int=None):
+#編輯指令
+def edit_command(default_permission:bool, commandID:int, guildID:int=None) -> str:
+  if guildID:
+    url = f'/applications/{applicationID}/guilds/{guildID}/commands/{commandID}'
+  else:
+    url = f'/applications/{applicationID}/commands/{commandID}'
+  json = {    #name, description, options, default_permission
+          'default_permission':default_permission
+    }
+  r = requests.patch(f'{api}{url}', json=json, headers=headers)
+  if r.ok:
+    return '更改成功'
+  else:
+    raise RequestFailed(r.reason)
+
+#取得指令權限列表
+def get_command_permissions(guildID:int, commandID:int=None) -> list:
   if commandID:
     url = f'/applications/{applicationID}/guilds/{guildID}/commands/{commandID}/permissions'
   else:
     url = f'/applications/{applicationID}/guilds/{guildID}/commands/permissions'
   r = requests.get(f'{api}{url}', headers=headers)
-  return r
+  if r.ok:
+    return r.json()
+  else:
+    raise RequestFailed(r.reason)

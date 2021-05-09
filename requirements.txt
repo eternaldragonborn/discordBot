@@ -7,3 +7,4 @@ redis
 addict
 pynacl
 python-dotenv
+bidict
