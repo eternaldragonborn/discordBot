@@ -16,18 +16,15 @@ class RequestFailed(Exception):
   def __str__(self):  return f"request failed, reason:{self.reason}"
 
 #編輯權限
-def edit_permission(ids:str, idType:int, permission:bool, guildID, commandID, oldPermission=None) -> str:
+def edit_permission(ID:int, idType:int, permission:bool, guildID, commandID, oldPermission=None) -> str:
   url = f'/applications/{applicationID}/guilds/{guildID}/commands/{commandID}/permissions'
   
-  ids = ids.split(',')
-   
   permissions = []
-  for id in ids:
-      permissions.append({
-            'id':int(id),  #role or user id
-            'type':idType,   #1:role, 2:user
-            'permission':permission   #T/F
-          })
+  permissions.append({
+        'id':int(ID),  #role or user id
+        'type':idType,   #1:role, 2:user
+        'permission':permission   #T/F
+      })
   if oldPermission:
     permissions.extend(oldPermission['permissions'])
    

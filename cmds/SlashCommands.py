@@ -138,7 +138,7 @@ class slashCommands(CogInit):
                           ])
   async def append_command_permission(self, ctx, permission, guildid, command_name, user: discord.User=None, role: discord.Role=None):
     command_id = self.cmd_mapping(command_name)
-    old_permissions = get_command_permissions(guildid, command_id)[0]['permissions']
+    old_permissions = get_command_permissions(guildid, command_id)
     if role:
       r = edit_permission(role.id, 1, permission, guildid, command_id, old_permissions)
     elif user:
