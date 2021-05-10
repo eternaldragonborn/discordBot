@@ -4,6 +4,7 @@ import re
 import discord
 import requests
 from core import CogInit
+import datetime as dt
 from discord.ext import commands
 from discord_slash import cog_ext
 from discord_slash.utils.manage_commands import create_option
@@ -16,8 +17,6 @@ headers = {
 }
 
 urlPattern = re.compile(r"https?://([\w\-]+\.)+[\w\-]+(/[\w\-./?%&=]*)?")
-
-guildID = [719132687897591808, 669934356172636199]
 
 
 def shorten(url):
@@ -53,7 +52,30 @@ class URLprocessing(CogInit):
             set_data(ctx.author.id, data)
             await ctx.send(f"已儲存 `{len(data)-length}` 個網址", delete_after=3)
 
-    @commands.command(aliases=["url_s", "save"])
+    @cog_ext.cog_subcommand(
+        base="url",
+        name="history",
+        description="儲存今天/指定天數前自己所發過的網址",
+        options=[create_option("days", "天數", 4, False)],
+    )
+    async def history_url_store(self, ctx, days: int = 0):
+        start_time = dt.datetime.utcnow()
+        time = start_time - dt.timedelta(days=days)
+        await ctx.defer()
+        urls = []
+        async for msg in ctx.channel.history(limit=2000, around=time):
+            if msg.author == ctx.author and urlPattern.match(msg.content):
+                contents = re.split(r"[\s\n]", msg.content)
+                for content in contents:
+                    r = urlPattern.match(content)
+                    if r:
+                        urls.append(r.group())
+        time_use = (dt.datetime.utcnow() - start_time).total_seconds()
+        m, s = divmod(time_use, 60)
+        await ctx.send(f"紀錄搜尋完成 | 花費時間：`{m:2.0f}:{s:2.0f}`", hidden=True)
+        await self.store_url(ctx, urls)
+
+    @commands.command(aliases=["s", "save"])
     async def reply_to_save_url(self, ctx, num: int = None):
         urls = []
         await ctx.message.delete()
@@ -122,7 +144,10 @@ class URLprocessing(CogInit):
             await ctx.send(msg, hidden=True)
 
     @cog_ext.cog_subcommand(
-        base="url", name="count", description="顯示已存多少網址", options=[create_option("user", "指定使用者", 6, False)]
+        base="url",
+        name="count",
+        description="顯示已存多少網址",
+        options=[create_option("user", "指定使用者", 6, False)],
     )
     async def url_count(self, ctx, user: discord.Member = None):
         if user and await self.bot.is_owner(ctx.author):
@@ -141,7 +166,9 @@ class URLprocessing(CogInit):
         name="delete",
         description="清空/刪除儲存的網址",
         options=[
-            create_option(name="start", description="要刪除的索引或連續的索引開頭", option_type=4, required=False),
+            create_option(
+                name="start", description="要刪除的索引或連續的索引開頭", option_type=4, required=False
+            ),
             create_option(name="end", description="連續的索引結尾", option_type=4, required=False),
             create_option(name="user", description="指定使用者", option_type=6, required=False),
         ],

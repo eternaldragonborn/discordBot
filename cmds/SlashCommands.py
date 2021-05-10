@@ -3,10 +3,15 @@ from typing import Union
 import yaml
 from addict import Dict
 from bidict import bidict
-from core import CogInit
-from core.slash_command import (edit_command, edit_permission,
-                                get_command_permissions, get_commands)
-from core.wrFiles import read_yaml, write_yaml
+from core import (
+    CogInit,
+    edit_command,
+    edit_permission,
+    get_command_permissions,
+    get_commands,
+    read_yaml,
+    write_yaml,
+)
 from discord.ext import commands
 from discord_slash import cog_ext, error
 from discord_slash.utils.manage_commands import create_choice, create_option
@@ -15,7 +20,7 @@ from discord_slash.utils.manage_commands import create_choice, create_option
 class slashCommands(CogInit):
     def __init__(self, bot):
         super().__init__(bot)
-        self.cmd_map = bidict(read_yaml("command_map"))
+        self.cmd_map = bidict(read_yaml("config")["command_map"])
 
     def get_name(self, id_type: int, ID: int, guild: int) -> str:
         """
@@ -53,19 +58,19 @@ class slashCommands(CogInit):
     async def get_commands(self, ctx, guildid=None):
         r = get_commands(guildid)
         if type(r) is list:
+            r = list(map(Dict, r))
             commands = Dict()
-            command_map = read_yaml("command_map")  # 指令id和名稱映射表
+            command_map = self.cmd_map  # 指令id和名稱映射表
             # 將列表整理成{name : {id, 預設權限}}，及映射表{name : id}
             for command in r:
-                command = Dict(command)
                 command_map[command.name] = int(command.id)
                 commands[command.name] = {
                     "id": int(command.id),
                     "default_permission": command.default_permission,
                 }
             commands = yaml.safe_dump(commands.to_dict(), indent=4)  # 轉為可輸出的文字
-            write_yaml("command_map", command_map)  # 將映射表寫入檔案中
-            self.cmd_map = bidict(command_map)
+            write_yaml("config", command_map, "command_map")  # 將映射表寫入檔案中
+            self.cmd_map = command_map
             await ctx.send(commands, hidden=True)
         else:  # request failed
             await ctx.send(r, hidden=True)
@@ -83,12 +88,8 @@ class slashCommands(CogInit):
                 required=True,
                 choices=[create_choice("True", "是"), create_choice("False", "否")],
             ),
-            create_option(
-                name="command_name", description="指令ID", option_type=3, required=True
-            ),
-            create_option(
-                name="guildid", description="指定伺服器ID", option_type=3, required=False
-            ),
+            create_option(name="command_name", description="指令ID", option_type=3, required=True),
+            create_option(name="guildid", description="指定伺服器ID", option_type=3, required=False),
         ],
     )
     async def edit_command(self, ctx, default_permission, command_name, guildid=None):
@@ -103,12 +104,8 @@ class slashCommands(CogInit):
         name="get_list",
         description="取得斜線指令權限列表",
         options=[
-            create_option(
-                name="guildid", description="伺服器ID", option_type=3, required=True
-            ),
-            create_option(
-                name="command_name", description="指令名稱", option_type=3, required=False
-            ),
+            create_option(name="guildid", description="伺服器ID", option_type=3, required=True),
+            create_option(name="command_name", description="指令名稱", option_type=3, required=False),
         ],
     )
     async def get_command_permission(self, ctx, guildid, command_name=None):
@@ -118,18 +115,16 @@ class slashCommands(CogInit):
             command_id = None
         r = get_command_permissions(guildid, command_id)  # 權限列表
         if type(r) is list:
+            r = list(map(Dict, r))
             commands = []
             guild = self.bot.get_guild(int(guildid)).name + f"({guildid})"  # 取得伺服器名稱
             # 將權限列表整理成{command_name : {name : [權限]}}
             for command in r:
-                command = Dict(command)
                 cmd_name = self.cmd_mapping(command.id)
                 permissions = []
                 # 整理每個人的權限
                 for permission in command.permissions:
-                    name = self.get_name(
-                        permission.type, int(permission["id"]), int(guildid)
-                    )
+                    name = self.get_name(permission.type, int(permission["id"]), int(guildid))
                     permissions.append({name: permission.permission})
 
                 commands.append({cmd_name: permissions})
@@ -167,12 +162,8 @@ class slashCommands(CogInit):
                 required=True,
                 choices=[create_choice("True", "是"), create_choice("False", "否")],
             ),
-            create_option(
-                name="guildid", description="伺服器ID", option_type=3, required=True
-            ),
-            create_option(
-                name="command_name", description="指令名稱", option_type=3, required=True
-            ),
+            create_option(name="guildid", description="伺服器ID", option_type=3, required=True),
+            create_option(name="command_name", description="指令名稱", option_type=3, required=True),
         ],
     )
     async def edit_command_permission(
@@ -209,12 +200,8 @@ class slashCommands(CogInit):
                 required=True,
                 choices=[create_choice("True", "是"), create_choice("False", "否")],
             ),
-            create_option(
-                name="guildid", description="伺服器ID", option_type=3, required=True
-            ),
-            create_option(
-                name="command_name", description="指令名稱", option_type=3, required=True
-            ),
+            create_option(name="guildid", description="伺服器ID", option_type=3, required=True),
+            create_option(name="command_name", description="指令名稱", option_type=3, required=True),
         ],
     )
     async def append_command_permission(
@@ -222,9 +209,7 @@ class slashCommands(CogInit):
     ):
         command_id = self.cmd_mapping(command_name)
         old_permissions = get_command_permissions(guildid, command_id)
-        r = edit_permission(
-            target, target_type, permission, guildid, command_id, old_permissions
-        )
+        r = edit_permission(target, target_type, permission, guildid, command_id, old_permissions)
         await ctx.send(r, hidden=True)
 
     # slash command error handler

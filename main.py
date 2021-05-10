@@ -7,6 +7,8 @@ from discord.ext import commands
 from discord_slash import SlashCommand
 from dotenv import load_dotenv
 
+from core import Config, keep_alive
+
 load_dotenv()
 
 logger = logging.getLogger("discord")
@@ -17,8 +19,7 @@ error_log.setFormatter(formatter)
 logger.addHandler(error_log)
 
 intents = discord.Intents.all()
-bot = commands.Bot(command_prefix="+", owner_id=384233645621248011, intents=intents)
-bot.remove_command("help")
+bot = commands.Bot(command_prefix="+", owner_id=Config.bot_owner, intents=intents)
 slash = SlashCommand(bot, override_type=True, sync_commands=True, sync_on_cog_reload=True)
 
 token = os.environ["BOT_TOKEN"]
@@ -29,25 +30,21 @@ async def on_ready():
     print("Bot is online")
 
 
-def initialization(folder):
-    for f in os.listdir(f"./{folder}"):
-        if f.endswith(".py"):
-            try:
-                bot.load_extension(f"{folder}.{f[:-3]}")
-            except Exception as e:
-                print(e)
-                print()
-            else:
-                print(f"{folder}.{f[:-3]} load success.")
+def initialization(folders: list):
+    for folder in folders:
+        for f in os.listdir(f"./{folder}"):
+            if f.endswith(".py"):
+                try:
+                    bot.load_extension(f"{folder}.{f[:-3]}")
+                except Exception as e:
+                    print(e)
+                    print()
+                else:
+                    print(f"{folder}.{f[:-3]} load success.")
 
 
-initialization("cmds")
+initialization(Config.folders)
 
-initialization("events")
-
-initialization("games")
-
-from core import keep_alive
 
 if __name__ == "__main__":
     keep_alive()

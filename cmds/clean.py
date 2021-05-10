@@ -1,5 +1,5 @@
 import discord
-from core import CogInit
+from core import CogInit, Config, Emoji
 from discord.ext import commands
 
 
@@ -11,11 +11,7 @@ class CLEAN(CogInit):
         def judge(msg: discord.Message) -> bool:
             return msg.author.id == target
 
-        if target == 719120395571298336 or ctx.author.id in [
-            546614210243854337,
-            384233645621248011,
-            590430031281651722,
-        ]:
+        if target == Config.bot_id or ctx.author.id in Config.managers:
             await ctx.message.delete()
             count = len(await ctx.channel.purge(check=judge, limit=limit))
             await ctx.send(f"清除了 {(count)} 條訊息", delete_after=5)
@@ -27,12 +23,12 @@ class CLEAN(CogInit):
     async def clean_channel(self, ctx):
         def check(reaction, user):
             if user == ctx.author and reaction.message.id == msg.id:
-                return str(reaction.emoji) == "\N{WHITE HEAVY CHECK MARK}"
+                return str(reaction.emoji) == Emoji.check
 
         if await self.bot.is_owner(ctx.author):
             await ctx.message.delete()
             msg = await ctx.send("確定刪除此頻道的所有訊息?", delete_after=6)
-            await msg.add_reaction("\N{WHITE HEAVY CHECK MARK}")
+            await msg.add_reaction(Emoji.check)
             try:
                 await self.bot.wait_for("reaction_add", timeout=5, check=check)
             except:
@@ -47,8 +43,7 @@ class CLEAN(CogInit):
         else:
             await ctx.message.delete()
             await ctx.send(
-                "You don't have permission or you are not in the target channel.",
-                delete_after=3,
+                "You don't have permission or you are not in the target channel.", delete_after=3
             )
 
 

@@ -1,11 +1,7 @@
-from core import CogInit, readFile
+from core import CogInit
 from discord.ext import commands
 from discord_slash import cog_ext
 from discord_slash.utils.manage_commands import create_choice, create_option
-
-authorId = readFile("setting")["authorId"]
-botId = readFile("setting")["botId"]
-guildID = [719132687897591808]
 
 
 class BASIC(CogInit):

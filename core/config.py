@@ -1,16 +1,9 @@
-# coding=utf-8
-# -*- coding: UTF-8 -*-
-import json
 import os
 from typing import Union
 
 import MySQLdb
 import yaml
-
-
-def readFile(file: str):
-    with open(f"{file}.json", "r", encoding="utf8") as f:
-        return json.load(f)
+from addict import Dict
 
 
 def read_yaml(file: str) -> Union[list, dict]:
@@ -22,8 +15,15 @@ def read_yaml(file: str) -> Union[list, dict]:
             return data
 
 
-def write_yaml(file: str, data: Union[dict, list]) -> None:
-    with open(f"{file}.yaml", "w", encoding="utf8") as f:
+def write_yaml(file: str, data: Union[dict, list], category: str = None) -> None:
+    if type(data) is Dict:
+        data = data.to_dict()
+    if category:
+        with open(file + ".yaml", "r", encoding="utf8") as f:
+            old_data = yaml.safe_load(f)
+            old_data[category] = data
+            data = old_data
+    with open(file + ".yaml", "w", encoding="utf8") as f:
         yaml.safe_dump(data, f, encoding="utf8", allow_unicode=True)
     return
 
@@ -78,3 +78,12 @@ def SQL_inquiry(query, num: int = None):
 
 def SQL_getData(table, column, data, num: int = None):
     return SQL_inquiry(f'SELECT * FROM {table} WHERE {column}="{data}"', num)
+
+
+CONFIG = Dict(read_yaml("config"))
+
+Config: Dict = CONFIG.config
+
+Game: Dict = CONFIG.game
+
+Emoji: Dict = CONFIG.emojis
