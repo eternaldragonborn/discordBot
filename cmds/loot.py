@@ -1,5 +1,5 @@
 from core import CogInit, readFile
-import discord, random
+import random
 from discord.ext import commands
 
 statu = 0
@@ -13,14 +13,15 @@ botId = readFile("setting")["botId"]
 
 class Loot(CogInit):
     @commands.command()
-    async def loot(self, ctx, n: int =1, *, arg=""):
+    async def loot(self, ctx, n: int = 1, *, arg=""):
         global statu
         global initiator
         global item
         global winner_num
         if statu == 1:
             await ctx.send(
-                f"已經有抽獎正在進行中，發起人：{self.bot.get_user(initiator).mention}", delete_after=3)
+                f"已經有抽獎正在進行中，發起人：{self.bot.get_user(initiator).mention}", delete_after=3
+            )
         else:
             if n <= 0:
                 await ctx.send("無效的抽出人數", delete_after=3)
@@ -30,7 +31,8 @@ class Loot(CogInit):
                 initiator = ctx.author.id
                 item = arg
                 await ctx.send(
-                    f"{ctx.author.mention} 開始了抽獎，預計抽出 ***{winner_num}*** 個人，輸入'**抽**'參加抽獎，指令'**+loot_e**'抽出得獎人")
+                    f"{ctx.author.mention} 開始了抽獎，預計抽出 ***{winner_num}*** 個人，輸入'**抽**'參加抽獎，指令'**+loot_e**'抽出得獎人"
+                )
         await ctx.message.delete()
 
     @commands.command()
@@ -54,7 +56,7 @@ class Loot(CogInit):
                     winners = random.sample(participants, winner_num)
                     winners_m = ""
                     for i in winners:
-                        winners_m+=(f"{self.bot.get_user(i).mention} ")
+                        winners_m += f"{self.bot.get_user(i).mention} "
                     await ctx.send(f"恭喜\n{winners_m}\n抽到了 {item}", delete_after=15)
                 participants = []
                 statu = 0
@@ -68,15 +70,13 @@ class Loot(CogInit):
         if msg.content == "抽" and statu == 1 and msg.author.id != botId:
             if msg.author.id == initiator:
                 await msg.channel.send(
-                    f"{self.bot.get_user(initiator).mention} 你不行抽你自己",
-                    delete_after=4)
+                    f"{self.bot.get_user(initiator).mention} 你不行抽你自己", delete_after=4
+                )
             elif msg.author.id in participants:
-                await msg.channel.send(
-                    f"{msg.author.mention} 你已參加此抽獎", delete_after=3)
+                await msg.channel.send(f"{msg.author.mention} 你已參加此抽獎", delete_after=3)
             else:
                 participants.append(msg.author.id)
-                await msg.channel.send(
-                    f"{msg.author.mention} 參加成功", delete_after=5)
+                await msg.channel.send(f"{msg.author.mention} 參加成功", delete_after=5)
             await msg.delete(delay=3)
 
 
