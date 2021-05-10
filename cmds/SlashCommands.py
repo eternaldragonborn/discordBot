@@ -69,7 +69,7 @@ class slashCommands(CogInit):
                     "default_permission": command.default_permission,
                 }
             commands = yaml.safe_dump(commands.to_dict(), indent=4)  # 轉為可輸出的文字
-            write_yaml("config", command_map, "command_map")  # 將映射表寫入檔案中
+            write_yaml("config", dict(command_map), "command_map")  # 將映射表寫入檔案中
             self.cmd_map = command_map
             await ctx.send(commands, hidden=True)
         else:  # request failed
