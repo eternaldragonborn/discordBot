@@ -1,8 +1,13 @@
+import os
+import re
+
+import discord
+import requests
 from core import CogInit
-import requests, os, discord, re
-from discord_slash.utils.manage_commands import create_option
-from discord_slash import cog_ext
 from discord.ext import commands
+from discord_slash import cog_ext
+from discord_slash.utils.manage_commands import create_option
+
 from cmds.redisDB import get_data, set_data
 
 headers = {

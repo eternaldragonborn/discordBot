@@ -1,7 +1,7 @@
-from discord.ext import commands
 from core import CogInit, readFile
+from discord.ext import commands
 from discord_slash import cog_ext
-from discord_slash.utils.manage_commands import create_option, create_choice
+from discord_slash.utils.manage_commands import create_choice, create_option
 
 authorId = readFile("setting")["authorId"]
 botId = readFile("setting")["botId"]
@@ -36,9 +36,7 @@ class BASIC(CogInit):
                 except Exception as e:
                     raise e
                 else:
-                    await ctx.send(
-                        f"> **{extension}** has been reloaded.", delete_after=3
-                    )
+                    await ctx.send(f"> **{extension}** has been reloaded.", delete_after=3)
             except Exception as e:
                 raise e
             else:
@@ -68,9 +66,7 @@ class BASIC(CogInit):
             try:
                 self.bot.unload_extension(f"{folder}.{extension}")
             except Exception as e:
-                await ctx.send(
-                    f"Something went wrong, exception:***{e}***", hiddne=True
-                )
+                await ctx.send(f"Something went wrong, exception:***{e}***", hiddne=True)
                 print(e)
                 print()
             else:

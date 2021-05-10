@@ -1,5 +1,6 @@
-from core import CogInit, readFile
 import random
+
+from core import CogInit, readFile
 from discord.ext import commands
 
 statu = 0

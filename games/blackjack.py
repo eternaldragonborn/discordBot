@@ -1,6 +1,8 @@
-import discord, random
-from discord.ext import commands
+import random
+
+import discord
 from core import CogInit, readFile
+from discord.ext import commands
 
 is_started = False
 in_game = False

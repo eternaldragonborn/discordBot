@@ -1,6 +1,6 @@
-import requests
 import os
 
+import requests
 
 api = "https://discord.com/api/v8/"
 headers = {"Authorization": f"Bot {os.environ['BOT_TOKEN']}"}

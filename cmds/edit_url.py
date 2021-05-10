@@ -1,6 +1,5 @@
+from core import CogInit, readFile, writeFile
 from discord.ext import commands
-from core import readFile, writeFile
-from core import CogInit
 
 urls = readFile("others")
 authorId = readFile("setting")["authorId"]

@@ -1,7 +1,11 @@
 # coding=utf-8
 # -*- coding: UTF-8 -*-
-import yaml, MySQLdb, os, json
+import json
+import os
 from typing import Union
+
+import MySQLdb
+import yaml
 
 
 def readFile(file: str):

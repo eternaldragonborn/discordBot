@@ -1,8 +1,11 @@
 #!/opt/virtualenvs/python3/bin/python
-import discord, os, logging
+import logging
+import os
+
+import discord
 from discord.ext import commands
-from dotenv import load_dotenv
 from discord_slash import SlashCommand
+from dotenv import load_dotenv
 
 load_dotenv()
 

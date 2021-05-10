@@ -1,6 +1,8 @@
-import random, re
-from discord.ext import commands
+import random
+import re
+
 from core import CogInit
+from discord.ext import commands
 
 
 class dice(CogInit):

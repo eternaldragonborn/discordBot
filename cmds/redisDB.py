@@ -1,8 +1,11 @@
-import os, json, re
+import json
+import os
+import re
+
 from core import CogInit
-from redis import Redis, ConnectionPool
 from discord_slash import cog_ext
 from discord_slash.utils.manage_commands import create_option
+from redis import ConnectionPool, Redis
 
 guildID = [719132687897591808]
 pool = ConnectionPool(
