@@ -1,13 +1,13 @@
 import random
 import re
 
-from core import CogInit, read_yaml
 from discord.ext import commands
+
+from core import CogInit, read_yaml
 
 
 def choice_reply(item):
     reply = read_yaml("config")["event"][item]
-    # return str(random.choices(list(url.keys()), weights=list(url.values()))).strip("[]'")
     return random.choices(list(reply.keys()), weights=list(reply.values()))[0]
 
 
@@ -30,10 +30,10 @@ class Events(CogInit):
 
             # emoji
             if re.search(
-                r"[獵打揍殺屠砍幹尻肏淦][\s\n\W]*(龍|竜|多拉貢|dragon)", msg.content, re.I
+                r"([獵打揍殺屠砍幹尻肏淦]|hit|slay|attack)[\s\n\W]*(龍|竜|多拉貢|dragon)", msg.content, re.I
             ) and not await self.bot.is_owner(msg.author):
                 await msg.reply("<:092:819621685010366475>" * 3)
-            if re.search(r"([＼／\\\|/l]\s?){3}|(上香)|(:021:)|(:034:)", msg.content):
+            if re.search(r"([＼／\\\|/l]\s?){3}|上香|:021:|:034:|:GIF009:", msg.content):
                 await msg.reply(choice_reply("pray"))
 
             # 圖片
@@ -49,6 +49,8 @@ class Events(CogInit):
                 await msg.channel.send(choice_reply("yeah"), delete_after=7)
             if re.match(r"派[耶欸ㄟ]", msg.content):
                 await msg.channel.send(choice_reply("pie"), delete_after=7)
+            if re.match(r"[在再應因已以]啦", msg.content):
+                await msg.channel.send(choice_reply("again"), delete_after=5)
 
     @commands.command()
     async def programming(self, ctx):

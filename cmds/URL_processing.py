@@ -1,15 +1,16 @@
+import datetime as dt
 import os
 import re
+from threading import enumerate
 
 import discord
 import requests
-from core import CogInit
-import datetime as dt
 from discord.ext import commands
 from discord_slash import cog_ext
 from discord_slash.utils.manage_commands import create_option
 
 from cmds.redisDB import get_data, set_data
+from core import CogInit
 
 headers = {
     "Content-Type": "application/json",
@@ -60,10 +61,11 @@ class URLprocessing(CogInit):
     )
     async def history_url_store(self, ctx, days: int = 0):
         start_time = dt.datetime.utcnow()
-        time = start_time - dt.timedelta(days=days)
-        await ctx.defer()
+        after = start_time - dt.timedelta(days=days)
+        before = after + dt.timedelta(days=1)
+        await ctx.defer(hidden=True)
         urls = []
-        async for msg in ctx.channel.history(limit=2000, around=time):
+        async for msg in ctx.channel.history(limit=None, after=after, before=before):
             if msg.author == ctx.author and urlPattern.match(msg.content):
                 contents = re.split(r"[\s\n]", msg.content)
                 for content in contents:
@@ -72,7 +74,7 @@ class URLprocessing(CogInit):
                         urls.append(r.group())
         time_use = (dt.datetime.utcnow() - start_time).total_seconds()
         m, s = divmod(time_use, 60)
-        await ctx.send(f"紀錄搜尋完成 | 花費時間：`{m:2.0f}:{s:2.0f}`", hidden=True)
+        await ctx.send(f"紀錄搜尋完成 | 花費時間：`{m:02.0f}:{s:02.0f}`", hidden=True)
         await self.store_url(ctx, urls)
 
     @commands.command(aliases=["s", "save"])
