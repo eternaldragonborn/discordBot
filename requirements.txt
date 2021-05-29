@@ -6,5 +6,6 @@ flask
 redis
 addict
 pynacl
-python-dotenv
 bidict
+pyyaml
+requests

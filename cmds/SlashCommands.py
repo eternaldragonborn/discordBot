@@ -216,13 +216,13 @@ class slashCommands(CogInit):
     @commands.Cog.listener()
     async def on_slash_command_error(self, ctx, ex):
         if isinstance(ex, error.IncorrectFormat):
-            await ctx.send("斜線指令格式錯誤，已進行紀錄", hidden=True)
+            await ctx.channel.send("斜線指令格式錯誤，已進行紀錄", delete_after=10)
         elif isinstance(ex, error.DuplicateCommand):
-            await ctx.send("指令重複，已進行紀錄", hidden=True)
+            await ctx.channel.send("指令重複，已進行紀錄", delete_after=10)
         elif isinstance(ex, error.IncorrectType):
-            await ctx.send("輸入的參數類型錯誤", hidden=True)
+            await ctx.channel.send("輸入的參數類型錯誤", delete_after=10)
         else:
-            await ctx.send(f"發生例外錯誤 {ex}，已進行紀錄", hidden=True)
+            await ctx.channel.send(f"發生例外錯誤 {ex}，已進行紀錄", delete_after=10)
         if not await self.bot.is_owner(ctx.author):
             await self.bot.get_channel(812628283631206431).send(
                 f"指令：/{ctx.name}(id:{ctx.command_id}, by:{ctx.author.mention})\n錯誤：{ex}"

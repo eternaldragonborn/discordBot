@@ -334,20 +334,25 @@ class SUBSCRIBE(CogInit):
                     f'''SELECT `artists`.`artist`, `artists`.`subscriber`,
                         `subscribers`.`preview_url`, `subscribers`.`download_url`
                         FROM `artists` NATURAL JOIN `subscribers`
-                        WHERE `artist`="{artist}"''',
-                    1,
+                        WHERE `artist` LIKE "%{artist}%"'''
                 )
-                if data:  # [artist, subscriber, preview, download]
+                if len(data) == 1:  # [artist, subscriber, preview, download]
+                    data = data[0]
                     if self.authorCheck(ctx, data[1]):
-                        query = f'UPDATE `artists` SET `lastUpdateTime`="{timestamp}", `status`=0 WHERE `artist`="{artist}"'
-                        msg = f"{data[1]} 於 `{timestamp}` 更新了 `{artist}`"
+                        query = f'UPDATE `artists` SET `lastUpdateTime`="{timestamp}", `status`=0 WHERE `artist`="{data[0]}"'
+                        msg = f"{data[1]} 於 `{timestamp}` 更新了 `{data[0]}`"
                         if await self.changeData(ctx, query, msg, False):
                             await ctx.send(f"{msg} \n>>> 預覽：{data[2]}\n下載：{data[3]}")
                     else:
-                        await ctx.send(f"你不是 `{artist}` 的訂閱者或頻道錯誤", delete_after=5)
+                        await ctx.send(f"你不是 `{data[0]}` 的訂閱者或頻道錯誤", delete_after=5)
                         break
+                elif len(data) > 1:
+                    await ctx.send(
+                        f"輸入的繪師名過於模糊，有以下可能：" + "、".join(list(map(lambda x: f"`{x[0]}`", data))),
+                        hidden=True,
+                    )
                 else:
-                    await ctx.send(f"無`{artist}`此繪師的訂閱紀錄", delete_after=5)
+                    await ctx.send(f"搜尋不到有關`{artist}`的繪師訂閱紀錄", delete_after=5)
 
     @cog_ext.cog_subcommand(
         base="subscribe",
@@ -365,14 +370,22 @@ class SUBSCRIBE(CogInit):
     async def noupdate(self, ctx, artists):
         artists = artists.split(",")
         for artist in artists:
-            artist_data = SQL_getData("artists", "artist", artist, 1)
-            if artist_data:
+            artist_data = SQL_inquiry(
+                f"SELECT artist, subscriber FROM artists WHERE artist LIKE '%{artist}%'"
+            )
+            if len(artist_data) == 1:
+                artist_data = artist_data[0]
                 if self.authorCheck(ctx, artist_data[1]):
-                    query = f'UPDATE `artists` SET `lastUpdateTime`="{str(get_date())}", `status`=2 WHERE `artist`="{artist}"'
-                    await self.changeData(ctx, query, f"{artist_data[1]}：`{artist}`本月沒有更新")
+                    query = f'UPDATE `artists` SET `lastUpdateTime`="{str(get_date())}", `status`=2 WHERE `artist`="{artist_data[0]}"'
+                    await self.changeData(ctx, query, f"{artist_data[1]}：`{artist_data[0]}`本月沒有更新")
                 else:
                     await ctx.send("沒有權限或頻道錯誤", hidden=True)
                     break
+            elif len(artist_data) > 1:
+                await ctx.send(
+                    f"輸入的繪師名過於模糊，有以下可能：" + "、".join(list(map(lambda x: f"`{x[0]}`", artist_data))),
+                    hidden=True,
+                )
             else:
                 await ctx.send(f"無 `{artist}` 此繪師的訂閱紀錄", delete_after=5)
 
@@ -499,14 +512,15 @@ class SUBSCRIBE(CogInit):
                     await ctx.send("無此訂閱者或該訂閱者沒訂閱任何繪師", hidden=True)
 
             elif target_type == 1:  # 繪師
-                query = f'''SELECT artists.subscriber, artists.lastUpdateTime, artists.mark, artists.status,
+                query = f'''SELECT artists.artist, artists.subscriber, artists.lastUpdateTime, artists.mark, artists.status,
                             subscribers.preview_url, subscribers.download_url
                             FROM artists LEFT JOIN subscribers ON artists.subscriber=subscribers.subscriber
-                            WHERE artists.artist = "{target}"'''
-                data = SQL_inquiry(query, 1)
-                if data:
-                    subscriber, update_time, mark, status, preview, download = data
-                    message = f"`{target}`{mark}：\n>>> 訂閱者： {subscriber}\n更新狀態："
+                            WHERE artists.artist LIKE "%{target}%"'''
+                data = SQL_inquiry(query)
+                if len(data) == 1:
+                    data = data[0]
+                    aerist, subscriber, update_time, mark, status, preview, download = data
+                    message = f"`{data[0]}`{mark}：\n>>> 訂閱者： {subscriber}\n更新狀態："
 
                     if status == 1:
                         message += "新增訂閱資料後未更新\n"
@@ -519,8 +533,11 @@ class SUBSCRIBE(CogInit):
                     message += f"預覽：{preview}\n下載：{download}"
 
                     await ctx.send(message, hidden=True)
+                elif len(data) > 1:
+                    artists = "、".join(list(map(lambda x: f"`{x[0]}`", data)))
+                    await ctx.send(f"輸入的繪師名過於模糊，有以下可能：{artists}", hidden=True)
                 else:
-                    await ctx.send("無人訂閱此繪師", delete_after=5)
+                    await ctx.send("搜尋不到相關繪師", delete_after=5)
         else:
             await ctx.send("頻道錯誤", delete_after=5)
 
