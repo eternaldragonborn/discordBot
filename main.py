@@ -1,15 +1,15 @@
-#!/opt/virtualenvs/python3/bin/python
 import logging
 import os
 
 import discord
 from discord.ext import commands
 from discord_slash import SlashCommand
-from dotenv import load_dotenv
+
+# from dotenv import load_dotenv
 
 from core import Config, keep_alive
 
-load_dotenv()
+# load_dotenv()
 
 logger = logging.getLogger("discord")
 logger.setLevel(logging.WARNING)
