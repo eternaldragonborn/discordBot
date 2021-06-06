@@ -44,7 +44,7 @@ class Events(CogInit):
             if re.search(r"[uhe]m{3,}|\N{THINKING FACE}", msg.content, re.I):
                 await msg.channel.send(choice_reply("emm"), delete_after=10)
             if "並沒有" in msg.content or "不要瞎掰" in msg.content:
-                await msg.channel.send(choice_reply("not"), delete_after=7)
+                await msg.channel.send(choice_reply("it's_not"), delete_after=7)
             if re.search(r"[^不]*好耶", msg.content):
                 await msg.channel.send(choice_reply("yeah"), delete_after=7)
             if re.match(r"派[耶欸ㄟ]", msg.content):
