@@ -33,7 +33,10 @@ class Events(CogInit):
                 r"([獵打揍殺屠砍幹尻肏淦]|hit|slay|attack)[\s\n\W]*(龍|竜|多拉貢|dragon)", msg.content, re.I
             ) and not await self.bot.is_owner(msg.author):
                 await msg.reply("<:092:819621685010366475>" * 3)
-            if re.search(r"([＼／\\\|/l]\s?){3}|上香|:021:|:034:|:GIF009:", msg.content):
+            if (
+                re.search(r"([＼／\\\|/l]\s?){3}|上香|:021:|:034:|:GIF009:", msg.content)
+                and "http" not in msg.content
+            ):
                 await msg.reply(choice_reply("pray"))
 
             # 圖片

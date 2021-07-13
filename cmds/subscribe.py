@@ -328,6 +328,7 @@ class SUBSCRIBE(CogInit):
         except Exception as e:
             await ctx.send(e, hidden=True)
         else:
+            msg = ""
             for artist in artists:
                 await ctx.defer()
                 data = SQL_inquiry(
@@ -340,9 +341,10 @@ class SUBSCRIBE(CogInit):
                     data = data[0]
                     if self.authorCheck(ctx, data[1]):
                         query = f'UPDATE `artists` SET `lastUpdateTime`="{timestamp}", `status`=0 WHERE `artist`="{data[0]}"'
-                        msg = f"{data[1]} 於 `{timestamp}` 更新了 `{data[0]}`"
+                        msg += f"{data[1]} 於 `{timestamp}` 更新了 `{data[0]}`\n"
                         if await self.changeData(ctx, query, msg, False):
-                            await ctx.send(f"{msg} \n>>> 預覽：{data[2]}\n下載：{data[3]}")
+                            msg += f">>> 預覽：{data[2]}\n下載：{data[3]}"
+                            # await ctx.send(f"{msg} \n>>> 預覽：{data[2]}\n下載：{data[3]}")
                     else:
                         await ctx.send(f"你不是 `{data[0]}` 的訂閱者或頻道錯誤", delete_after=5)
                         break
@@ -353,6 +355,7 @@ class SUBSCRIBE(CogInit):
                     )
                 else:
                     await ctx.send(f"搜尋不到有關`{artist}`的繪師訂閱紀錄", delete_after=5)
+            await ctx.send(msg)
 
     @cog_ext.cog_subcommand(
         base="subscribe",
@@ -600,7 +603,7 @@ class SUBSCRIBE(CogInit):
                 message += "無"
             await ctx.send(message)
             await ctx.send(
-                "若已更新但還是在清單中，請確認更新時使用指令`+update 繪師 日期（mm-dd）`或告知管理者更新日期，繪師無更新請使用`+noupdate 繪師`"
+                "若已更新但還是在清單中，請確認更新時使用指令`/subscribe update`或告知管理者更新日期，繪師無更新請使用`/subscribe noupdate`"
             )
 
     @cog_ext.cog_subcommand(

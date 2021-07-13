@@ -39,7 +39,10 @@ def conn():
     )
 
 
-db = conn()
+try:
+    db = conn()
+except:
+    db = None
 
 
 def get_cursor():  # 確認連線狀況並回傳cursor

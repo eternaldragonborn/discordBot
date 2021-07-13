@@ -64,9 +64,9 @@ class slashCommands(CogInit):
             # 將列表整理成{name : {id, 預設權限}}，及映射表{name : id}
             for command in r:
                 command_map[command.name] = int(command.id)
-                commands[command.name] = {
-                    "id": int(command.id),
-                    "default_permission": command.default_permission,
+                commands[f"`{command.name}`"] = {
+                    "`id`": int(command.id),
+                    "`default_permission`": command.default_permission,
                 }
             commands = yaml.safe_dump(commands.to_dict(), indent=4)  # 轉為可輸出的文字
             write_yaml("config", dict(command_map), "command_map")  # 將映射表寫入檔案中
@@ -117,7 +117,7 @@ class slashCommands(CogInit):
         if type(r) is list:
             r = list(map(Dict, r))
             commands = []
-            guild = self.bot.get_guild(int(guildid)).name + f"({guildid})"  # 取得伺服器名稱
+            guild = f"`{self.bot.get_guild(int(guildid)).name}`" + f"(`{guildid}`)"  # 取得伺服器名稱
             # 將權限列表整理成{command_name : {name : [權限]}}
             for command in r:
                 cmd_name = self.cmd_mapping(command.id)
@@ -125,9 +125,9 @@ class slashCommands(CogInit):
                 # 整理每個人的權限
                 for permission in command.permissions:
                     name = self.get_name(permission.type, int(permission["id"]), int(guildid))
-                    permissions.append({name: permission.permission})
+                    permissions.append({f"`{name}`": permission.permission})
 
-                commands.append({cmd_name: permissions})
+                commands.append({f"`{cmd_name}`": permissions})
             await ctx.send(
                 yaml.safe_dump({guild: commands}, indent=4, allow_unicode=True),
                 hidden=True,
@@ -222,6 +222,7 @@ class slashCommands(CogInit):
         elif isinstance(ex, error.IncorrectType):
             await ctx.channel.send("輸入的參數類型錯誤", delete_after=10)
         else:
+            print(ex)
             await ctx.channel.send(f"發生例外錯誤 {ex}，已進行紀錄", delete_after=10)
         if not await self.bot.is_owner(ctx.author):
             await self.bot.get_channel(812628283631206431).send(

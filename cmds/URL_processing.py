@@ -1,7 +1,6 @@
 import datetime as dt
 import os
 import re
-from threading import enumerate
 
 import discord
 import requests
