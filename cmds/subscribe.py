@@ -68,8 +68,9 @@ class SUBSCRIBE(CogInit):
     async def print_overview(self):
         message = "訂閱總覽(如內容有誤需要更改請告知管理者)\n>>> "
         artists = SQL_inquiry(
-            """SELECT artists.artist, artists.subscriber, artists.mark FROM `artists`
-               NATURAL JOIN subscribers ORDER BY `subscribers`.addTime, subscriber, `artist`"""
+            """SELECT artists.artist, artists.subscriber, artists.mark
+               FROM artists NATURAL JOIN subscribers
+               ORDER BY subscribers."addTime", artists.subscriber, artists.artist"""
         )
         subscribers = {}
         for artist, subscriber, mark in artists:  # 將資料彙整為dict，{subscriber:[artist, mark]}
@@ -152,17 +153,12 @@ class SUBSCRIBE(CogInit):
                 await ctx.send(f"{subscriber} 已在訂閱者名單", hidden=True)
             else:
                 download_url = download_url.replace(" ", "\n")
-                if "\n" in download_url:
-                    download_url = "\n" + download_url
                 if preview_url is not None:  # 有預覽網址
-                    if "\n" in preview_url:
-                        preview_url = "\n" + preview_url
                     preview_url = preview_url.replace(" ", "\n")
-                    query = f"""INSERT INTO subscribers(subscriber, preview_url, download_url)
-                                VALUES("{subscriber}", "{preview_url}", "{download_url}")"""
                 else:  # 無預覽網址
-                    query = f"""INSERT INTO subscribers(subscriber, download_url)
-                                VALUES("{subscriber}", "{download_url}")"""
+                    preview_url = "無"
+                query = f"""INSERT INTO subscribers(subscriber, preview_url, download_url)
+                                VALUES('{subscriber}', '{preview_url}', '{download_url}')"""
                 message = f"新訂閱者:{subscriber}(by {ctx.author.mention})"
                 await self.changeData(ctx, query, message)
         else:
@@ -194,7 +190,7 @@ class SUBSCRIBE(CogInit):
 
                 msg = await ctx.send(message)
                 if await self.actionCheck(msg, ctx.author):
-                    query = f'DELETE FROM `subscribers` WHERE `subscriber`="{subscriber}"'
+                    query = f'DELETE FROM subscribers WHERE subscriber="{subscriber}"'
                     message = f"訂閱紀錄：{ctx.author.mention} 刪除了 {subscriber} 的資料"
                     await self.changeData(ctx, query, message)
                 else:
@@ -233,10 +229,10 @@ class SUBSCRIBE(CogInit):
                     lastUpdate = str(get_date())
                     if mark:
                         mark = f"({mark})"
-                        query = f"""INSERT INTO `artists`(`artist`, `subscriber`, `lastUpdateTime`, `mark`)
-                                    VALUES("{artist}", "{subscriber}", "{lastUpdate}", "{mark}")"""
+                        query = f"""INSERT INTO artists(artist, subscriber, "lastUpdateTime", mark)
+                                    VALUES('{artist}', '{subscriber}', '{lastUpdate}', '{mark}')"""
                     else:
-                        query = f'INSERT INTO `artists`(`artist`, `subscriber`, `lastUpdateTime`) VALUES("{artist}", "{subscriber}", "{lastUpdate}")'
+                        query = f"INSERT INTO artists(artist, subscriber, \"lastUpdateTime\") VALUES('{artist}', '{subscriber}', '{lastUpdate}')"
                     message = f"訂閱紀錄：{subscriber} 訂閱了 `{artist}`(by{ctx.author.mention})"
                     await self.changeData(ctx, query, message)
         else:
@@ -258,7 +254,7 @@ class SUBSCRIBE(CogInit):
                 if not await self.actionCheck(msg, ctx.author):
                     await ctx.send("刪除資料取消", delete_after=5)
                 else:
-                    query = f'DELETE FROM `artists` WHERE `artist`="{artist[0]}"'
+                    query = f"DELETE FROM artists WHERE artist='{artist[0]}'"
                     message = f"訂閱紀錄：{artist[1]} 取消訂閱 `{artist[0]}`(by {ctx.author.mention})"
                     await self.changeData(ctx, query, message)
             else:
@@ -289,7 +285,7 @@ class SUBSCRIBE(CogInit):
                     if not await self.actionCheck(msg, ctx.author):
                         await ctx.send("更改訂閱者取消", delete_after=5)
                     else:
-                        query = f'UPDATE `artists` SET `subscriber`="{newsubscriber}" WHERE `artist`="{artist[0]}"'
+                        query = f"UPDATE artists SET subscriber='{newsubscriber}' WHERE artist='{artist[0]}'"
                         message = f"訂閱紀錄：{ctx.author.mention} 將 `{artist[0]}` 由 {artist[1]} 改為 {newsubscriber} 訂閱"
                         await self.changeData(ctx, query, message)
             else:
@@ -332,15 +328,15 @@ class SUBSCRIBE(CogInit):
             for artist in artists:
                 await ctx.defer()
                 data = SQL_inquiry(
-                    f'''SELECT `artists`.`artist`, `artists`.`subscriber`,
-                        `subscribers`.`preview_url`, `subscribers`.`download_url`
-                        FROM `artists` NATURAL JOIN `subscribers`
-                        WHERE `artist` LIKE "%{artist}%"'''
+                    f"""SELECT artists.artist, artists.subscriber,
+                        subscribers.preview_url, subscribers.download_url
+                        FROM artists NATURAL JOIN subscribers
+                        WHERE artist LIKE '%{artist}%'"""
                 )
                 if len(data) == 1:  # [artist, subscriber, preview, download]
                     data = data[0]
                     if self.authorCheck(ctx, data[1]):
-                        query = f'UPDATE `artists` SET `lastUpdateTime`="{timestamp}", `status`=0 WHERE `artist`="{data[0]}"'
+                        query = f"UPDATE artists SET \"lastUpdateTime\"='{timestamp}', status=0 WHERE artist='{data[0]}'"
                         msg += f"{data[1]} 於 `{timestamp}` 更新了 `{data[0]}`\n"
                         if await self.changeData(ctx, query, msg, False):
                             msg += f">>> 預覽：{data[2]}\n下載：{data[3]}"
@@ -355,7 +351,8 @@ class SUBSCRIBE(CogInit):
                     )
                 else:
                     await ctx.send(f"搜尋不到有關`{artist}`的繪師訂閱紀錄", delete_after=5)
-            await ctx.send(msg)
+            if msg:
+                await ctx.send(msg)
 
     @cog_ext.cog_subcommand(
         base="subscribe",
@@ -379,7 +376,7 @@ class SUBSCRIBE(CogInit):
             if len(artist_data) == 1:
                 artist_data = artist_data[0]
                 if self.authorCheck(ctx, artist_data[1]):
-                    query = f'UPDATE `artists` SET `lastUpdateTime`="{str(get_date())}", `status`=2 WHERE `artist`="{artist_data[0]}"'
+                    query = f"UPDATE artists SET \"lastUpdateTime\"='{str(get_date())}', status=2 WHERE artist='{artist_data[0]}'"
                     await self.changeData(ctx, query, f"{artist_data[1]}：`{artist_data[0]}`本月沒有更新")
                 else:
                     await ctx.send("沒有權限或頻道錯誤", hidden=True)
@@ -436,9 +433,7 @@ class SUBSCRIBE(CogInit):
             if not SQL_getData("subscribers", "subscriber", subscriber, 1):
                 await ctx.send(f"{subscriber} 不在訂閱者名單內", delete_after=5)
             else:
-                query = (
-                    f'UPDATE `subscribers` SET `{item}`="{url}" WHERE `subscriber`="{subscriber}"'
-                )
+                query = f"UPDATE subscribers SET {item}='{url}' WHERE subscriber='{subscriber}'"
                 if await self.changeData(ctx, query):
                     await ctx.send("更改成功", hidden=True)
         else:
@@ -479,16 +474,12 @@ class SUBSCRIBE(CogInit):
         url = url.split(" ")
         url = "\n" + "\n".join(url)
         if self.authorCheck(ctx, subscriber):
-            data = SQL_inquiry(
-                f"SELECT `{item}` FROM `subscribers` WHERE `subscriber`={subscriber}", 1
-            )
+            data = SQL_inquiry(f"SELECT {item} FROM subscribers WHERE subscriber='{subscriber}'", 1)
             if not data:
                 await ctx.send(f"{subscriber} 不在訂閱者名單內", delete_after=5)
             else:
                 url = data + url
-                query = (
-                    f'UPDATE `subscribers` SET `{item}`="{url}" WHERE `subscriber`="{subscriber}"'
-                )
+                query = f"UPDATE subscribers SET {item}='{url}' WHERE subscriber='{subscriber}'"
                 if await self.changeData(ctx, query):
                     await ctx.send("更改成功", hidden=True)
         else:
@@ -497,9 +488,9 @@ class SUBSCRIBE(CogInit):
     async def info(self, ctx, target, target_type):
         if self.channelCheck(ctx):
             if target_type == 0:  # 訂閱者
-                query = f'''SELECT artists.artist, artists.mark, subscribers.preview_url, subscribers.download_url
-                            FROM artists LEFT JOIN subscribers ON artists.subscriber=subscribers.subscriber
-                            WHERE artists.subscriber = "{target}"'''
+                query = f"""SELECT artists.artist, artists.mark, subscribers.preview_url, subscribers.download_url
+                            FROM artists NATURAL JOIN subscribers
+                            WHERE artists.subscriber = '{target}'"""
                 data = SQL_inquiry(query)
                 if data:
                     message = f"{target}：\n>>> 訂閱繪師："
@@ -515,10 +506,10 @@ class SUBSCRIBE(CogInit):
                     await ctx.send("無此訂閱者或該訂閱者沒訂閱任何繪師", hidden=True)
 
             elif target_type == 1:  # 繪師
-                query = f'''SELECT artists.artist, artists.subscriber, artists.lastUpdateTime, artists.mark, artists.status,
+                query = f"""SELECT artists.artist, artists.subscriber, artists."lastUpdateTime", artists.mark, artists.status,
                             subscribers.preview_url, subscribers.download_url
-                            FROM artists LEFT JOIN subscribers ON artists.subscriber=subscribers.subscriber
-                            WHERE artists.artist LIKE "%{target}%"'''
+                            FROM artists NATURAL JOIN subscribers
+                            WHERE artists.artist LIKE '%{target}%'"""
                 data = SQL_inquiry(query)
                 if len(data) == 1:
                     data = data[0]
@@ -569,7 +560,7 @@ class SUBSCRIBE(CogInit):
     async def check(self, ctx):
         if self.managerCheck(ctx):
             limitDate = get_date() - datetime.timedelta(days=30)  # 30天前的日期
-            query = f'SELECT artist, subscriber, status, lastUpdateTime FROM `artists` WHERE `lastUpdateTime` < "{limitDate}" ORDER BY `subscriber`, `lastUpdateTime`'  # 查詢上次更新日期小於30天前日期的繪師
+            query = f'SELECT artist, subscriber, status, "lastUpdateTime" FROM artists WHERE "lastUpdateTime" < \'{limitDate}\' ORDER BY subscriber, "lastUpdateTime"'  # 查詢上次更新日期小於30天前日期的繪師
             nonupdateArtists = SQL_inquiry(query)
             message = "超過(含)30天未更新：\n>>> "
             if nonupdateArtists:  # 有未更新的繪師

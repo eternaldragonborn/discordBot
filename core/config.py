@@ -1,7 +1,7 @@
 import os
 from typing import Union
 
-import MySQLdb
+import psycopg2
 import yaml
 from addict import Dict
 
@@ -28,21 +28,24 @@ def write_yaml(file: str, data: Union[dict, list], category: str = None) -> None
     return
 
 
+class ConnectToDatabaseFailed(Exception):
+    pass
+
+
 def conn():
-    return MySQLdb.connect(
-        host=os.environ["SQL_HOST"],
-        user=os.environ["SQL_USER"],
-        passwd=os.environ["SQL_PASSWD"],
-        db=os.environ["SQL_DB"],
-        charset="utf8",
-        use_unicode=True,
-    )
+    try:
+        return psycopg2.connect(
+            host=os.environ["SQL_HOST"],
+            user=os.environ["SQL_USER"],
+            password=os.environ["SQL_PASSWD"],
+            dbname=os.environ["SQL_DB"],
+            client_encoding="utf8",
+        )
+    except:
+        raise ConnectToDatabaseFailed
 
 
-try:
-    db = conn()
-except:
-    db = None
+db = conn()
 
 
 def get_cursor():  # 確認連線狀況並回傳cursor
@@ -64,6 +67,7 @@ def SQL_modify(query):
         except Exception as e:
             db.rollback()
             raise e
+    db.close()
     return
 
 
@@ -80,7 +84,7 @@ def SQL_inquiry(query, num: int = None):
 
 
 def SQL_getData(table, column, data, num: int = None):
-    return SQL_inquiry(f'SELECT * FROM {table} WHERE {column}="{data}"', num)
+    return SQL_inquiry(f"SELECT * FROM {table} WHERE {column}='{data}'", num)
 
 
 CONFIG = Dict(read_yaml("config"))
