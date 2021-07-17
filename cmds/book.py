@@ -71,7 +71,7 @@ class Book(CogInit):
                 await payload.member.send(url)
                 try:
                     SQL_modify(
-                        f"INSERT INTO user_record VALUES('{payload.message_id}', '{payload.member.mention}')"
+                        f"INSERT INTO user_record VALUES('{payload.message_id}', '<@{payload.user_id}>')"
                     )
                 except:
                     pass
