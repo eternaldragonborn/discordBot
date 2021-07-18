@@ -56,8 +56,11 @@ class Book(CogInit):
                 users = SQL_getData(
                     "user_record", "msg_id", ctx.message.reference.message_id
                 )  # ((msg_id, user_id))
-                users = "\n".join(set(map(lambda x: x[1], users)))
-                await ctx.author.send(f"取得過該連結的使用者紀錄：\n{users}")
+                if users:
+                    users = "\n".join(set(map(lambda x: x[1], users)))
+                    await ctx.author.send(f"取得過該連結的使用者紀錄：\n{users}")
+                else:
+                    await ctx.author.send("無人取得過該連結")
             else:
                 await ctx.send("該訊息尚未建檔，因此無取得連結的使用者紀錄")
         else:
@@ -68,13 +71,19 @@ class Book(CogInit):
         if payload.channel_id in CHANNELS and not (payload.member.bot):
             if REDIS.sismember("msg_ids", payload.message_id) and payload.emoji.id == EMOJI_ID:
                 url = SQL_getData("book_url", "msg_id", payload.message_id, 1)[1]
-                await payload.member.send(url)
                 try:
-                    SQL_modify(
-                        f"INSERT INTO user_record VALUES('{payload.message_id}', '<@{payload.user_id}>')"
-                    )
+                    await payload.member.send(url)
                 except:
-                    pass
+                    await self.bot.get_channel(payload.channel_id).send(
+                        payload.member.mention + "無法私訊連結給你，請檢查私訊設定"
+                    )
+                else:
+                    try:
+                        SQL_modify(
+                            f"INSERT INTO user_record VALUES('{payload.message_id}', '<@{payload.user_id}>')"
+                        )
+                    except:
+                        pass
 
     @commands.Cog.listener()
     async def on_reaction_remove(self, reaction, user):
