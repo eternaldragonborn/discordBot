@@ -75,7 +75,7 @@ class Book(CogInit):
                     await payload.member.send(url)
                 except:
                     await self.bot.get_channel(payload.channel_id).send(
-                        payload.member.mention + "無法私訊連結給你，請檢查私訊設定"
+                        payload.member.mention + "無法私訊連結給你，請檢查私訊設定", delete_after=7
                     )
                 else:
                     try:
